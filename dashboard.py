@@ -28,13 +28,30 @@ if "agent" not in st.session_state:
         if "logs_text" not in st.session_state:
             st.session_state.logs_text = []
         st.session_state.logs_text.append(msg)
-        # Update placeholder for logs (locked at bottom)
-        st.session_state.logs_area.text("\n".join(st.session_state.logs_text))
+        # Update placeholder for logs if it has been created
+        if st.session_state.get("logs_area") is not None:
+            st.session_state.logs_area.text("\n".join(st.session_state.logs_text))
 
     st.session_state.agent = AgenticMortgageResearchAgent(log_callback=ui_log_callback, llm_client=llm_client)
     st.session_state.logs_text = []
+    st.session_state.first_run = True
+else:
+    st.session_state.first_run = False
 
 agent = st.session_state.agent
+
+# Initialize logs_area as None (will be created before it's needed for display)
+if "logs_area" not in st.session_state:
+    st.session_state.logs_area = None
+
+# Run agentic plan on first load
+if st.session_state.first_run:
+    with st.spinner("🤖 Agent is analyzing mortgage market..."):
+        try:
+            agent.run_action("agentic_plan", force=False)
+        except Exception as e:
+            st.error(f"Error running agentic plan: {e}")
+    st.session_state.first_run = False
 
 # ---------- Sidebar ----------
 st.sidebar.title("Agent Actions")
@@ -88,8 +105,6 @@ if "mortgage_rates" in agent.knowledge and not agent.knowledge["mortgage_rates"]
         ).properties(title='30-Year Fixed Mortgage Rates', height=300),
         use_container_width=True
     )
-else:
-    st.info("Mortgage rates not loaded yet.")
 
 # Home Prices Chart
 if "home_prices" in agent.knowledge and not agent.knowledge["home_prices"].empty:
@@ -102,8 +117,6 @@ if "home_prices" in agent.knowledge and not agent.knowledge["home_prices"].empty
         ).properties(title='US Home Prices Index', height=300),
         use_container_width=True
     )
-else:
-    st.info("Home prices not loaded yet.")
 
 # Combined normalized chart
 if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
@@ -127,16 +140,12 @@ if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
         tooltip=['date:T', 'Metric:N', 'Value:Q']
     ).properties(title='Normalized Mortgage Rates vs Home Prices', height=300)
     st.altair_chart(chart_combined, use_container_width=True)
-else:
-    st.info("Combined chart not available yet.")
 
 # ---------- Agent Logs ----------
 st.subheader("📝 Agent Logs")
 
-# Lock logs container at bottom
-logs_container = st.container()
-if "logs_area" not in st.session_state:
-    st.session_state.logs_area = logs_container.empty()
+# Create logs placeholder (will be used for real-time updates on button clicks)
+if st.session_state.logs_area is None:
+    st.session_state.logs_area = st.empty()
 
-# Render logs dynamically
 st.session_state.logs_area.text("\n".join(agent.logs))
