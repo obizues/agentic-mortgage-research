@@ -4,8 +4,15 @@ from dotenv import load_dotenv
 # Load environment variables from .env file if it exists
 load_dotenv()
 
-# API Configuration
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+# Try to get API key from Streamlit secrets first (for deployed apps)
+# then fall back to environment variables (for local development)
+try:
+    import streamlit as st
+    ANTHROPIC_API_KEY = st.secrets.get("ANTHROPIC_API_KEY", os.getenv("ANTHROPIC_API_KEY"))
+except (ImportError, AttributeError):
+    # If not in Streamlit context, just use environment variables
+    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+
 MODEL_NAME = "claude-3-5-sonnet-20241022"
 
 # Agent Configuration
