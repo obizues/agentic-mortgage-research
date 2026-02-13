@@ -13,9 +13,9 @@ A hands-on AI project demonstrating **intelligent agent reasoning** with real LL
 
 ## 🤖 Agentic AI Highlights
 
-- LLM-driven planning decides which actions run based on state.
-- Multi-step orchestration: plan → execute → analyze → summarize.
-- Transparent logs show decision trace in the UI.
+- LLM-driven planning using Claude (model set in `config.MODEL_NAME`).
+- Orchestration selects actions from the knowledge state and runs them in sequence.
+- Decision trace is logged in the UI for transparency.
 - Graceful fallback to heuristics when LLM is unavailable.
 
 ## 🎯 What This Demonstrates
