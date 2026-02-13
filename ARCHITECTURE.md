@@ -130,19 +130,34 @@ self.knowledge = {
 
 ```
 Sidebar:
+├── App Version Info
+├── Multi-Agent System Badge
+├── About This Project (collapsible)
+├── Project Documentation (collapsible)
 ├── Tech Stack (collapsible)
 ├── System Design Notes (collapsible)
 ├── Agent Controls (collapsible)
 │   ├── Force Refresh checkbox
 │   ├── Agentic Plan button
 │   ├── Regenerate Summary button
-│   └── Regenerate Perspectives button
+│   ├── Regenerate Round 1 button
+│   └── Run Full Debate button
+├── Outcome Validation (collapsible)
 └── Agent Logs (collapsible)
     └── 3-way filter (All / LLM / Roles)
 
 Main Area:
-├── Executive Summary
-├── Multi-Agent Perspectives (3-column cards)
+├── System Status Metrics (4 columns)
+├── Final Recommendation Banner (when debate complete)
+├── "Continue to Full Debate" Button (when Round 1 only)
+├── Complete Debate Transcript
+│   ├── Round Selection Buttons (1/2/3)
+│   └── Unified 3-Column Agent Layout
+│       ├── 📊 Planner (Blue theme)
+│       ├── 📉 Market Analyst (Green theme)
+│       └── 🛡️ Risk Officer (Red theme)
+├── Historical Debates (collapsible)
+├── Executive Summary (post-debate)
 ├── Mortgage Rates Chart (Altair)
 ├── Home Prices Chart (Altair)
 └── Normalized Comparison Chart (Altair)
@@ -152,7 +167,11 @@ Main Area:
 - **Real-time updates**: Callback system updates `st.session_state` during agent execution
 - **Status widget**: Shows progressive role execution with emoji tags
 - **Markdown-to-HTML**: Converts LLM markdown output for proper rendering
-- **Color-coded cards**: Blue (Planner), Green (Analyst), Red (Risk Officer)
+- **Unified 3-column layout**: All debate rounds displayed side-by-side for easy comparison
+- **Round selection**: Button-based navigation between Round 1/2/3 views
+- **Agent-specific colors**: Each agent has distinct visual identity throughout all rounds
+- **Compact spacing**: Optimized layout with minimal white space for cleaner presentation
+- **Progressive disclosure**: Round 1 auto-generated, Rounds 2 & 3 on-demand
 
 ### 3. Configuration (config.py)
 

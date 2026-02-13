@@ -19,6 +19,9 @@ class AgenticMortgageResearchAgent:
         self.log_callback = log_callback
         self.last_fetch_dates = {}  # track when data was fetched
         self.llm_client = llm_client  # Optional Claude client for LLM-based reasoning
+        self.session_cost = 0.0  # Track estimated LLM API costs
+        # Initialize fetch_timestamps in knowledge for dashboard status display
+        self.knowledge["fetch_timestamps"] = {}
 
     # ---------- Logging ----------
     def log(self, message: str):
@@ -98,6 +101,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
                     max_tokens=500,
                     messages=[{"role": "user", "content": prompt}]
                 )
+                self.session_cost += 0.002  # Approximate cost for planning call
             except Exception as conn_e:
                 self.log(f"LLM connection error: {conn_e}")
                 raise
@@ -131,6 +135,11 @@ Only include actions that should be run. Skip actions if data is recent and unch
             if "summarize_insights" not in actions:
                 self.log("LLM Plan: appending summarize_insights")
                 self.run_action("summarize_insights", force=force)
+            
+            # Auto-run Round 1 debate (initial positions) for display
+            if self.llm_client and "debate_round_1" not in self.knowledge:
+                self.log("🎯 Auto-generating Round 1 debate positions...")
+                self._debate_round_1_initial_positions()
             
             self.log("🤖 LLM-based planning finished.")
             return "LLM agentic plan executed."
@@ -261,6 +270,10 @@ Only include actions that should be run. Skip actions if data is recent and unch
         df["date"] = pd.to_datetime(df["date"])
         df["rate"] = pd.to_numeric(df["rate"], errors="coerce")
         self.knowledge["mortgage_rates"] = df.dropna()
+        # Track fetch timestamp
+        if "fetch_timestamps" not in self.knowledge:
+            self.knowledge["fetch_timestamps"] = {}
+        self.knowledge["fetch_timestamps"]["mortgage_rates"] = pd.Timestamp.now()
         return "Mortgage rates fetched."
 
     def analyze_rates(self, force=False):
@@ -293,6 +306,10 @@ Only include actions that should be run. Skip actions if data is recent and unch
         df["date"] = pd.to_datetime(df["date"])
         df["price"] = pd.to_numeric(df["price"], errors="coerce")
         self.knowledge["home_prices"] = df.dropna()
+        # Track fetch timestamp
+        if "fetch_timestamps" not in self.knowledge:
+            self.knowledge["fetch_timestamps"] = {}
+        self.knowledge["fetch_timestamps"]["home_prices"] = pd.Timestamp.now()
         return "Home prices fetched."
 
     def compare_with_home_prices(self, force=False):
@@ -388,6 +405,7 @@ Keep the response concise and actionable."""
                 max_tokens=400,
                 messages=[{"role": "user", "content": prompt}]
             )
+            self.session_cost += 0.003  # Approximate cost for insights call
             
             summary = message.content[0].text
             self.knowledge["summary"] = summary
@@ -472,6 +490,371 @@ Provide 2-3 concise bullet points for your perspective."""
                 max_tokens=250,
                 messages=[{"role": "user", "content": prompt}]
             )
+            self.session_cost += 0.002  # Approximate cost per role perspective
             role_outputs[role] = message.content[0].text.strip()
 
         self.knowledge["role_insights"] = role_outputs
+
+    # ---------- Multi-Round Debate System ----------
+    
+    def run_agent_debate(self, force=False):
+        """
+        Execute a full 3-round agent debate with cross-examination and consensus.
+        This is the main entry point for the debate system.
+        """
+        if not force and "debate_results" in self.knowledge:
+            return "Agent debate already completed."
+        
+        if self.llm_client is None:
+            return "LLM client not available. Cannot run agent debate."
+        
+        self.log("🎯 Starting Multi-Round Agent Debate System...")
+        
+        # Ensure we have data to debate about
+        if "rate_insights" not in self.knowledge:
+            self.analyze_rates()
+        if "comparison" not in self.knowledge:
+            self.compare_with_home_prices()
+        
+        # Round 1: Initial Positions
+        self._debate_round_1_initial_positions()
+        
+        # Round 2: Cross-Examination
+        self._debate_round_2_cross_examination()
+        
+        # Round 3: Consensus Voting
+        self._debate_round_3_consensus()
+        
+        self.log("✅ Multi-round debate completed successfully!")
+        return "Agent debate completed with consensus reached."
+    
+    def continue_debate(self, force=False):
+        """
+        Continue debate from Round 1 to Rounds 2 & 3.
+        Assumes Round 1 is already completed.
+        """
+        if not force and "debate_results" in self.knowledge:
+            return "Agent debate already completed."
+        
+        if self.llm_client is None:
+            return "LLM client not available. Cannot continue debate."
+        
+        if "debate_round_1" not in self.knowledge:
+            self.log("ERROR: Round 1 not found. Run Agentic Plan first.")
+            return "Round 1 positions not found. Cannot continue debate."
+        
+        self.log("🎯 Continuing Agent Debate (Rounds 2 & 3)...")
+        
+        # Round 2: Cross-Examination
+        self._debate_round_2_cross_examination()
+        
+        # Round 3: Consensus Voting
+        self._debate_round_3_consensus()
+        
+        self.log("✅ Multi-round debate completed successfully!")
+        return "Agent debate completed with consensus reached."
+    
+    def _debate_round_1_initial_positions(self):
+        """Round 1: Each agent presents their initial position."""
+        self.log("📋 Round 1: Initial Positions")
+        
+        rate_insights = self.knowledge.get("rate_insights", {})
+        comparison = self.knowledge.get("comparison", "No comparison available")
+        summary = self.knowledge.get("summary", "Basic market summary")
+        
+        roles = {
+            "Planner": {
+                "emoji": "📊",
+                "prompt": "You are a strategic planner analyzing mortgage market data. Focus on actionable insights and decision-making frameworks."
+            },
+            "Market Analyst": {
+                "emoji": "📉", 
+                "prompt": "You are a mortgage market analyst. Focus on trend analysis, historical context, and data interpretation."
+            },
+            "Risk Officer": {
+                "emoji": "🛡️",
+                "prompt": "You are a risk management officer. Focus on identifying risks, vulnerabilities, and protective measures."
+            }
+        }
+        
+        debate_positions = {}
+        
+        for role_name, role_config in roles.items():
+            self.log(f"{role_config['emoji']} {role_name}: Formulating initial position...")
+            
+            prompt = f"""{role_config['prompt']}
+
+Market Context:
+- Current 30-year mortgage rate: {rate_insights.get('latest_rate', 'N/A')}%
+- 12-month average rate: {rate_insights.get('12_month_avg', 'N/A')}%
+- Trend signal: {rate_insights.get('trend_signal', 'N/A')}
+- Housing market: {comparison}
+- Overall summary: {summary}
+
+Task: Provide your initial market position in 3-4 bullet points. Be specific about whether you lean BULLISH (rates will fall), BEARISH (rates will rise/stay high), or NEUTRAL. Include your confidence level (0-100%)."""
+
+            message = self.llm_client.messages.create(
+                model=config.MODEL_NAME,
+                max_tokens=300,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            self.session_cost += 0.003
+            
+            position_text = message.content[0].text.strip()
+            
+            # Extract confidence if mentioned (simple parsing)
+            confidence = 70.0  # default
+            if "confidence" in position_text.lower():
+                import re
+                conf_match = re.search(r'(\d+)%?\s*confidence', position_text.lower())
+                if conf_match:
+                    confidence = float(conf_match.group(1))
+            
+            debate_positions[role_name] = {
+                "round": 1,
+                "position": position_text,
+                "confidence": confidence,
+                "emoji": role_config['emoji']
+            }
+        
+        self.knowledge["debate_round_1"] = debate_positions
+        self.log("✓ Round 1 complete: All initial positions recorded")
+    
+    def _debate_round_2_cross_examination(self):
+        """Round 2: Each agent reviews others' positions and responds with challenges/support."""
+        self.log("🔍 Round 2: Cross-Examination & Challenges")
+        
+        round_1_positions = self.knowledge.get("debate_round_1", {})
+        if not round_1_positions:
+            self.log("ERROR: Round 1 not completed. Cannot proceed to Round 2.")
+            return
+        
+        round_2_responses = {}
+        
+        for role_name, agent_data in round_1_positions.items():
+            # Get the other agents' positions
+            other_positions = {k: v for k, v in round_1_positions.items() if k != role_name}
+            
+            other_positions_text = "\n\n".join([
+                f"**{name}** {data['emoji']}:\n{data['position']}"
+                for name, data in other_positions.items()
+            ])
+            
+            self.log(f"{agent_data['emoji']} {role_name}: Reviewing peer positions and responding...")
+            
+            prompt = f"""You are the {role_name}. You previously stated:
+
+YOUR POSITION:
+{agent_data['position']}
+
+Now you have seen the positions from your peer agents:
+
+PEER POSITIONS:
+{other_positions_text}
+
+Task: 
+1. Identify ONE specific point from the peer positions that you either:
+   - CHALLENGE (provide counter-evidence or alternative interpretation)
+   - SUPPORT (reinforce with additional reasoning)
+
+2. After reviewing peer arguments, do you want to revise your stance or confidence level?
+
+Provide 2-3 bullet points. Be specific about which agent you're addressing."""
+
+            message = self.llm_client.messages.create(
+                model=config.MODEL_NAME,
+                max_tokens=300,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            self.session_cost += 0.003
+            
+            response_text = message.content[0].text.strip()
+            
+            round_2_responses[role_name] = {
+                "round": 2,
+                "original_position": agent_data['position'],
+                "cross_examination": response_text,
+                "emoji": agent_data['emoji']
+            }
+        
+        self.knowledge["debate_round_2"] = round_2_responses
+        self.log("✓ Round 2 complete: All cross-examinations recorded")
+    
+    def _debate_round_3_consensus(self):
+        """Round 3: Each agent votes with final confidence and we build consensus."""
+        self.log("🤝 Round 3: Consensus Building & Final Vote")
+        
+        round_1 = self.knowledge.get("debate_round_1", {})
+        round_2 = self.knowledge.get("debate_round_2", {})
+        
+        if not round_1 or not round_2:
+            self.log("ERROR: Previous rounds not completed. Cannot proceed to Round 3.")
+            return
+        
+        final_votes = {}
+        vote_stances = []
+        
+        for role_name in round_1.keys():
+            agent_r1 = round_1[role_name]
+            agent_r2 = round_2.get(role_name, {})
+            
+            self.log(f"{agent_r1['emoji']} {role_name}: Casting final vote...")
+            
+            prompt = f"""You are the {role_name}. Review your debate history:
+
+ROUND 1 - Your Initial Position:
+{agent_r1['position']}
+
+ROUND 2 - Your Cross-Examination Response:
+{agent_r2.get('cross_examination', 'N/A')}
+
+Task: Cast your FINAL VOTE on the mortgage rate outlook:
+1. Choose: BULLISH (rates falling), BEARISH (rates rising/high), or NEUTRAL
+2. Provide final confidence level (0-100%)
+3. Give 1-2 sentences justifying your vote
+
+Format your response as:
+VOTE: [BULLISH/BEARISH/NEUTRAL]
+CONFIDENCE: [0-100]%
+REASONING: [your justification]"""
+
+            message = self.llm_client.messages.create(
+                model=config.MODEL_NAME,
+                max_tokens=200,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            self.session_cost += 0.002
+            
+            vote_text = message.content[0].text.strip()
+            
+            # Parse vote
+            stance = "NEUTRAL"
+            confidence = 50.0
+            
+            if "BULLISH" in vote_text.upper():
+                stance = "BULLISH"
+            elif "BEARISH" in vote_text.upper():
+                stance = "BEARISH"
+            
+            import re
+            conf_match = re.search(r'CONFIDENCE:\s*(\d+)', vote_text, re.IGNORECASE)
+            if conf_match:
+                confidence = float(conf_match.group(1))
+            
+            final_votes[role_name] = {
+                "round": 3,
+                "stance": stance,
+                "confidence": confidence,
+                "reasoning": vote_text,
+                "emoji": agent_r1['emoji']
+            }
+            
+            vote_stances.append(stance)
+        
+        # Calculate consensus
+        from collections import Counter
+        vote_counts = Counter(vote_stances)
+        majority_vote = vote_counts.most_common(1)[0][0]
+        consensus_score = (vote_counts[majority_vote] / len(vote_stances)) * 100
+        
+        # Compute average confidence
+        avg_confidence = sum(v['confidence'] for v in final_votes.values()) / len(final_votes)
+        
+        # Generate final recommendation
+        final_recommendation = f"{majority_vote} (Consensus: {consensus_score:.0f}%, Avg Confidence: {avg_confidence:.0f}%)"
+        
+        self.knowledge["debate_round_3"] = final_votes
+        self.knowledge["debate_results"] = {
+            "final_recommendation": final_recommendation,
+            "consensus_score": consensus_score,
+            "avg_confidence": avg_confidence,
+            "majority_vote": majority_vote,
+            "vote_breakdown": dict(vote_counts)
+        }
+        
+        self.log(f"✅ Consensus reached: {final_recommendation}")
+        self.log(f"   Vote breakdown: {dict(vote_counts)}")
+    
+    def save_debate_to_database(self, db):
+        """Save the completed debate to the historical database."""
+        from database import DebateDatabase
+        
+        if "debate_results" not in self.knowledge:
+            self.log("No debate results to save.")
+            return
+        
+        debate_results = self.knowledge["debate_results"]
+        
+        # Collect all agent positions across rounds
+        agent_positions = []
+        
+        for round_num in [1, 2, 3]:
+            round_key = f"debate_round_{round_num}"
+            round_data = self.knowledge.get(round_key, {})
+            
+            for role_name, data in round_data.items():
+                if round_num == 1:
+                    position_record = {
+                        "agent_role": role_name,
+                        "round_number": 1,
+                        "position": data.get('position'),
+                        "confidence": data.get('confidence'),
+                        "reasoning": data.get('position'),
+                        "challenges": None,
+                        "responses": None
+                    }
+                elif round_num == 2:
+                    position_record = {
+                        "agent_role": role_name,
+                        "round_number": 2,
+                        "position": "Cross-Examination",
+                        "confidence": None,
+                        "reasoning": data.get('cross_examination'),
+                        "challenges": data.get('cross_examination'),
+                        "responses": None
+                    }
+                else:  # round 3
+                    position_record = {
+                        "agent_role": role_name,
+                        "round_number": 3,
+                        "position": data.get('stance'),
+                        "confidence": data.get('confidence'),
+                        "reasoning": data.get('reasoning'),
+                        "challenges": None,
+                        "responses": None
+                    }
+                
+                agent_positions.append(position_record)
+        
+        # Collect market snapshot
+        rate_insights = self.knowledge.get("rate_insights", {})
+        home_prices = self.knowledge.get("home_prices")
+        
+        latest_price = None
+        price_yoy = None
+        if home_prices is not None and len(home_prices) > 0:
+            latest_price = float(home_prices.iloc[-1]['price'])
+            if len(home_prices) > 12:
+                year_ago_price = float(home_prices.iloc[-13]['price'])
+                price_yoy = ((latest_price - year_ago_price) / year_ago_price) * 100
+        
+        market_snapshot = {
+            "mortgage_rate": rate_insights.get('latest_rate'),
+            "home_price_index": latest_price,
+            "rate_12mo_avg": rate_insights.get('12_month_avg'),
+            "price_yoy_change": price_yoy
+        }
+        
+        # Save to database
+        debate_id = db.save_debate(
+            final_recommendation=debate_results['final_recommendation'],
+            consensus_score=debate_results['consensus_score'],
+            session_cost=self.session_cost,
+            agent_positions=agent_positions,
+            market_snapshot=market_snapshot
+        )
+        
+        self.knowledge["last_saved_debate_id"] = debate_id
+        self.log(f"💾 Debate saved to database with ID: {debate_id}")
+        
+        return debate_id

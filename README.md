@@ -36,10 +36,13 @@ A hands-on AI project demonstrating **intelligent agent reasoning** with real LL
 ## 🤖 Agentic AI Highlights
 
 - **Multi-Agent Architecture**: Three specialized roles (Planner, Market Analyst, Risk Officer) provide diverse perspectives on market data
+- **Multi-Round Debate System** 🆕: Agents engage in 3-round debates with cross-examination and consensus building
+- **Historical Learning** 🆕: SQLite database stores all debates with outcome validation against actual market movements
 - **LLM-Driven Planning**: Claude decides which actions to execute based on knowledge state
 - **Real-Time Visualization**: Color-coded perspective cards with markdown rendering
 - **Orchestration**: Selects actions from knowledge state and runs them in sequence
 - **Decision Transparency**: Complete decision trace logged in UI with emoji-based filtering
+- **Cost Tracking**: Real-time LLM API cost monitoring per session
 - **Graceful Fallback**: Heuristics when LLM unavailable
 
 ## 🎯 What This Demonstrates
@@ -75,6 +78,51 @@ The agent follows a intelligent decision flow:
 - **Graceful Fallback**: If LLM unavailable, uses heuristic-based planning
 - **Real-Time Logging**: Transparent decision-making with emoji-filtered role execution tracking
 - **Interactive Dashboard**: Streamlit UI with granular controls (Agentic Plan, Regenerate Summary, Regenerate Perspectives)
+
+### 🔥 Multi-Round Debate System (v1.3.0)
+
+The debate system demonstrates true agentic autonomy where agents:
+
+**Round 1: Initial Positions**
+- Each agent independently analyzes market data
+- Presents their stance (BULLISH/BEARISH/NEUTRAL) with confidence levels
+- Documents reasoning with 3-4 key points
+
+**Round 2: Cross-Examination**
+- Agents review peers' positions
+- Challenge assumptions or provide supporting evidence
+- Respond with specific critiques referencing other agents' arguments
+
+**Round 3: Consensus Building**
+- Agents cast final votes after considering all perspectives
+- System calculates consensus score and average confidence
+- Final recommendation generated from majority vote
+
+**Historical Learning**
+- All debates stored in SQLite database
+- Outcome validation: Compare predictions vs. actual market movements
+- Accuracy tracking: Monitor agent prediction performance over time
+- Audit trail: Complete record of reasoning for every decision
+
+**Why This Matters**: Agents aren't just executing pre-programmed responses—they're engaging in dynamic discourse, self-correcting, and learning from outcomes. This showcases emergent intelligence and sophisticated multi-agent collaboration.
+
+### 🎮 User Experience Flow
+
+**Automatic Round 1 (No Click Required)**
+1. Run "Agentic Plan" → Data fetched, analyzed, and Round 1 positions automatically generated
+2. See 3 color-coded agent positions with confidence levels displayed immediately
+3. Each agent has independently analyzed the market and staked a position
+
+**Interactive Debate Continuation**
+4. Click "Continue to Full Debate" button → Rounds 2 & 3 are generated
+5. **Round Selection**: Use buttons to switch between Round 1/2/3 views
+6. **Unified 3-Column Layout**: See all agents' responses side-by-side for each round:
+   - Round 1: Initial positions with confidence levels
+   - Round 2: Cross-examination with peer critiques
+   - Round 3: Final votes with consensus
+7. Full debate results saved to database with outcome validation
+
+**This design showcases the system immediately** (Round 1 always visible) while letting users **opt into the full debate** to see cross-examination and consensus building. The consistent 3-column layout makes it easy to compare agent reasoning throughout all stages.
 
 ---
 
@@ -153,16 +201,23 @@ ANTHROPIC_API_KEY = "sk-ant-xxx..."
 
 **Dashboard** (`dashboard.py`)
 - Streamlit UI with real-time updates and status widget
-- Multi-agent perspectives displayed in color-coded cards (blue/green/red themes)
+- **Unified 3-Column Debate Interface**: All rounds displayed side-by-side for easy agent comparison
+- **Round Selection Buttons**: Switch between Round 1, 2, and 3 to see each stage of debate
+- **Agent-Specific Colors**: Each agent has distinct visual identity:
+  - **📊 Planner**: Blue theme (#0a74da)
+  - **📉 Market Analyst**: Green theme (#00c48c)
+  - **🛡️ Risk Officer**: Red theme (#e53e3e)
 - Markdown-to-HTML conversion for proper formatting of LLM outputs
+- **Compact Layout**: Optimized spacing throughout for cleaner presentation
 - Data visualizations (mortgage rates, home prices, normalized comparison)
 - Agent logs with 3-way filtering (All logs / LLM decisions / Role outputs)
 - Interactive controls:
-  - **Agentic Plan**: Full orchestration (respects force refresh checkbox)
-  - **Regenerate Summary**: Always creates fresh summary
-  - **Regenerate Perspectives**: Always generates new role perspectives
+  - **Agentic Plan**: Full orchestration with automatic Round 1 generation
+  - **Continue to Full Debate**: Progressive disclosure for Rounds 2 & 3
+  - **Regenerate Round 1**: Refresh initial positions
+  - **Run Full Debate**: Complete 3-round debate from scratch
   - **Clear Logs**: Resets decision trace
-- Collapsible sidebar sections (Tech Stack, System Design, Agent Controls, Logs)
+- Collapsible sidebar sections (About, Documentation, Tech Stack, System Design, Agent Controls, Outcome Validation, Logs)
 
 **Configuration** (`config.py`)
 - Centralized settings (API keys, cache windows, thresholds)

@@ -47,3 +47,9 @@ env/
 # Agent state & cache
 agent_state.json
 *.cache
+
+# Database
+agent_debates.db
+*.db
+*.sqlite
+*.sqlite3
