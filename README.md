@@ -2,6 +2,28 @@
 
 A hands-on AI project demonstrating **intelligent agent reasoning** with real LLM integration. This agent autonomously researches US mortgage rates and home prices, uses Claude AI to make intelligent decisions about data fetching, and generates insightful analysis.
 
+## 📖 Table of Contents
+
+- [Tech Stack](#-tech-stack-recruiter-friendly)
+- [Agentic AI Highlights](#-agentic-ai-highlights)
+- [What This Demonstrates](#-what-this-demonstrates)
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture) ⭐ **Includes 5 Mermaid Diagrams** | [Deep Dive →](ARCHITECTURE.md)
+  - [System Architecture Diagram](#system-architecture-diagram)
+  - [Multi-Agent Execution Flow](#multi-agent-execution-flow)
+  - [Data Flow Architecture](#data-flow-architecture)
+  - [Component Dependencies](#component-interaction--dependencies)
+  - [Deployment Architecture](#deployment-architecture-production-ready)
+- [LLM Integration Details](#-llm-integration-details)
+- [Configuration](#️-configuration)
+- [Monitoring & Logs](#-monitoring--logs)
+- [Learning & Extension](#-learning--extension-points)
+- [Tech Stack Details](#-tech-stack-details)
+- [Security](#-security-notes)
+- [License](#-license)
+
+---
+
 ## ✅ Tech Stack (Recruiter Friendly)
 
 - **Language**: Python 3.x
@@ -118,6 +140,9 @@ ANTHROPIC_API_KEY = "sk-ant-xxx..."
 
 ## 📊 Architecture
 
+> 📘 **For detailed technical documentation**, see [ARCHITECTURE.md](ARCHITECTURE.md)  
+> Includes: System layers, component deep dive, ADRs, deployment strategies, testing approaches, and scalability plans.
+
 ### Components
 
 **AgenticMortgageResearchAgent** (`AgenticMortgageResearchAgent.py`)
@@ -144,22 +169,302 @@ ANTHROPIC_API_KEY = "sk-ant-xxx..."
 - Environment variable support
 - Feature flags for LLM vs heuristic mode
 
-### Data Flow
+### System Architecture Diagram
 
+```mermaid
+graph TB
+    subgraph "User Interface Layer"
+        UI[Streamlit Dashboard<br/>dashboard.py]
+        Cards[Color-Coded<br/>Perspective Cards]
+        Viz[Data Visualizations<br/>Altair Charts]
+        Logs[Agent Logs<br/>3-Way Filter]
+    end
+    
+    subgraph "Agent Orchestration Layer"
+        Agent[AgenticMortgageResearchAgent<br/>Core Logic]
+        Planner[LLM-Based Planner<br/>Claude 3.5]
+        Actions[Action Methods<br/>fetch/analyze/compare]
+        KB[Knowledge Base<br/>In-Memory Cache]
+    end
+    
+    subgraph "Multi-Agent System"
+        RolePlanner[📊 Planner Role<br/>Action Sequencing]
+        RoleAnalyst[📉 Market Analyst<br/>Data Interpretation]
+        RoleRisk[🛡️ Risk Officer<br/>Risk Assessment]
+    end
+    
+    subgraph "External Services"
+        Claude[Anthropic Claude API<br/>LLM Planning & Insights]
+        FRED[FRED Economic Data API<br/>Mortgage Rates & Housing]
+    end
+    
+    subgraph "Configuration"
+        Config[config.py<br/>Settings & Secrets]
+        Secrets[.streamlit/secrets.toml<br/>API Keys]
+        Env[.env<br/>Environment Variables]
+    end
+    
+    UI --> Agent
+    Agent --> KB
+    Agent --> Planner
+    Planner --> Claude
+    Agent --> Actions
+    Actions --> FRED
+    Actions --> KB
+    
+    Agent --> RolePlanner
+    Agent --> RoleAnalyst
+    Agent --> RoleRisk
+    RolePlanner --> Claude
+    RoleAnalyst --> Claude
+    RoleRisk --> Claude
+    
+    KB --> Cards
+    KB --> Viz
+    Agent --> Logs
+    
+    Config --> Agent
+    Secrets --> Config
+    Env --> Config
+    
+    style UI fill:#e3f2fd
+    style Agent fill:#fff3e0
+    style Claude fill:#f3e5f5
+    style FRED fill:#e8f5e9
+    style KB fill:#fff9c4
 ```
-User Action
-    ↓
-agentic_plan() [calls LLM to decide]
-    ↓
-LLM Response: ["fetch_mortgage_rates", "analyze_rates", ...]
-    ↓
-Execute Actions in Sequence
-    ├─ fetch_mortgage_rates() → FRED API → cache
-    ├─ analyze_rates() → compute statistics
-    ├─ fetch_home_prices() → FRED API → cache
-    ├─ compare_with_home_prices() → merge & correlate
-    └─ summarize_insights() [calls LLM for analysis] → UI
+
+### Multi-Agent Execution Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Dashboard
+    participant Agent
+    participant Planner as 📊 Planner Role
+    participant Analyst as 📉 Market Analyst
+    participant Risk as 🛡️ Risk Officer
+    participant Claude as Claude API
+    participant FRED as FRED API
+    participant KB as Knowledge Base
+    
+    User->>Dashboard: Click "Agentic Plan"
+    Dashboard->>Agent: agentic_plan()
+    
+    Agent->>Planner: Evaluate system state
+    Planner->>Claude: "What actions needed?"
+    Claude-->>Planner: ["fetch_rates", "analyze", "generate_perspectives"]
+    
+    Agent->>FRED: fetch_mortgage_rates()
+    FRED-->>KB: Store rates data
+    
+    Agent->>KB: analyze_rates()
+    KB-->>KB: Compute statistics
+    
+    Agent->>Planner: Generate perspective
+    Planner->>Claude: "Plan next actions..."
+    Claude-->>Planner: Planner insights
+    
+    Agent->>Analyst: Generate perspective
+    Analyst->>Claude: "Analyze market trends..."
+    Claude-->>Analyst: Analyst insights
+    
+    Agent->>Risk: Generate perspective
+    Risk->>Claude: "Evaluate risks..."
+    Claude-->>Risk: Risk insights
+    
+    KB-->>Dashboard: Update perspectives cards
+    Dashboard-->>User: Display multi-agent insights
 ```
+
+### Data Flow Architecture
+
+```mermaid
+flowchart LR
+    subgraph Input
+        User[User Action<br/>Button Click]
+        Force[Force Refresh<br/>Checkbox]
+    end
+    
+    subgraph Planning
+        Check{Data Fresh?}
+        LLM[Claude LLM<br/>Planning]
+        Heuristic[Heuristic<br/>Fallback]
+    end
+    
+    subgraph Execution
+        FetchRates[Fetch Mortgage<br/>Rates FRED API]
+        FetchPrices[Fetch Home<br/>Prices FRED API]
+        Analyze[Analyze &<br/>Correlate]
+        Summary[Generate<br/>Summary]
+        Perspectives[Generate<br/>Perspectives]
+    end
+    
+    subgraph Storage
+        Cache[(Knowledge Base<br/>In-Memory Cache)]
+        Timestamp[Timestamp<br/>Tracking]
+    end
+    
+    subgraph Output
+        UI[Streamlit UI<br/>Update]
+        Cards[Multi-Agent<br/>Perspective Cards]
+        Charts[Data<br/>Visualizations]
+    end
+    
+    User --> Check
+    Force --> Check
+    Check -->|Stale| LLM
+    Check -->|Fresh| Summary
+    LLM --> FetchRates
+    LLM -.Fallback.-> Heuristic
+    Heuristic --> FetchRates
+    
+    FetchRates --> Cache
+    FetchPrices --> Cache
+    Cache --> Timestamp
+    Cache --> Analyze
+    Analyze --> Summary
+    Summary --> Perspectives
+    
+    Perspectives --> Cards
+    Cache --> Charts
+    Summary --> UI
+    Cards --> UI
+    Charts --> UI
+    
+    style LLM fill:#f3e5f5
+    style Cache fill:#fff9c4
+    style Cards fill:#e3f2fd
+    style UI fill:#e8f5e9
+```
+
+### Component Interaction & Dependencies
+
+```mermaid
+graph LR
+    subgraph "Frontend"
+        ST[Streamlit<br/>v1.54.0]
+        AL[Altair<br/>v6.0.0]
+    end
+    
+    subgraph "Agent Core"
+        PY[Python 3.14<br/>Core Logic]
+        PD[pandas 2.3.3<br/>Data Processing]
+    end
+    
+    subgraph "LLM Layer"
+        AN[Anthropic SDK<br/>v0.79.0]
+        CL[Claude 3.5 Haiku<br/>claude-3-haiku-20240307]
+    end
+    
+    subgraph "Data Sources"
+        FR[FRED API<br/>Economic Data]
+        RE[requests 2.32.5<br/>HTTP Client]
+    end
+    
+    subgraph "Configuration"
+        DT[python-dotenv<br/>v1.2.1]
+        SE[Streamlit Secrets<br/>.toml]
+    end
+    
+    ST --> PY
+    AL --> ST
+    PY --> PD
+    PY --> AN
+    AN --> CL
+    PY --> RE
+    RE --> FR
+    DT --> SE
+    SE --> PY
+    
+    style ST fill:#e3f2fd
+    style PY fill:#fff3e0
+    style CL fill:#f3e5f5
+    style FR fill:#e8f5e9
+```
+
+### Deployment Architecture (Production Ready)
+
+```mermaid
+graph TB
+    subgraph "Local Development"
+        Dev[Developer Machine<br/>Python venv]
+        Local[localhost:8501<br/>Streamlit Dev Server]
+        DevSecrets[.streamlit/secrets.toml<br/>Local API Keys]
+    end
+    
+    subgraph "Production Deployment"
+        LB[Load Balancer<br/>HTTPS/TLS]
+        App1[Streamlit App<br/>Container 1]
+        App2[Streamlit App<br/>Container 2]
+        AppN[Streamlit App<br/>Container N]
+    end
+    
+    subgraph "State Management"
+        Redis[(Redis Cache<br/>Session State)]
+        Metrics[Prometheus<br/>Metrics]
+    end
+    
+    subgraph "External APIs"
+        Claude2[Anthropic Claude<br/>Rate Limited]
+        FRED2[FRED API<br/>Public Data]
+    end
+    
+    subgraph "Secrets & Config"
+        Vault[HashiCorp Vault<br/>or AWS Secrets Manager]
+        EnvVars[Environment Variables<br/>Injected at Runtime]
+    end
+    
+    subgraph "Monitoring"
+        Logs[Centralized Logging<br/>ELK Stack]
+        Alerts[PagerDuty<br/>Alert Management]
+        Dash[Grafana Dashboards<br/>Performance Metrics]
+    end
+    
+    Dev --> Local
+    DevSecrets --> Local
+    
+    LB --> App1
+    LB --> App2
+    LB --> AppN
+    
+    App1 --> Redis
+    App2 --> Redis
+    AppN --> Redis
+    
+    App1 --> Claude2
+    App1 --> FRED2
+    App2 --> Claude2
+    App2 --> FRED2
+    
+    Vault --> EnvVars
+    EnvVars --> App1
+    EnvVars --> App2
+    
+    App1 --> Metrics
+    App2 --> Metrics
+    Metrics --> Dash
+    
+    App1 --> Logs
+    App2 --> Logs
+    Logs --> Alerts
+    
+    style LB fill:#e8f5e9
+    style Redis fill:#fff9c4
+    style Claude2 fill:#f3e5f5
+    style Vault fill:#ffebee
+    style Dash fill:#e3f2fd
+```
+
+**Key Architecture Decisions:**
+
+1. **Stateless Application**: Agent knowledge stored per-session for horizontal scaling
+2. **LLM Caching**: 24-hour cache validity reduces API costs and latency
+3. **Graceful Degradation**: Heuristic fallback when Claude API unavailable
+4. **Async-Ready**: Current implementation synchronous, easily adaptable to async/await
+5. **Security by Default**: API keys never committed, secrets.toml gitignored
+6. **Real-Time Feedback**: Callback-based logging enables streaming updates to UI
+7. **Modular Design**: Clean separation allows easy testing and mocking
 
 ---
 

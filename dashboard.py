@@ -47,6 +47,25 @@ st.markdown(
             color: #0a74da;
             font-size: 1.15rem;
         }
+        .stats-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 4px;
+            background: #e3f2fd;
+            border-left: 3px solid #0a74da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-online { background: #00c48c; }
+        .status-offline { background: #ff6b6b; }
     </style>
     <div class="fintech-header">
         🏦 Agentic Mortgage Research Dashboard
@@ -61,12 +80,60 @@ st.markdown(
     <div class="fintech-footer">
         Built by <b>Chris Obermeier</b> | Head of Engineering | SVP Engineering | AI Leader
         <p>
-        <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | <a href="https://github.com/obizues" target="_blank">GitHub</a> | <a href="mailto:chris.obermeier@gmail.com">Email</a>
+        <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | 
+        <a href="https://github.com/obizues" target="_blank">GitHub</a> | 
+        <a href="mailto:chris.obermeier@gmail.com">Email</a>
+        <p style="margin-top: 12px; font-size: 0.95rem;">
+        ⭐ <a href="https://github.com/obizues/agentic-mortgage-research" target="_blank">Star on GitHub</a> | 
+        📖 <a href="https://github.com/obizues/agentic-mortgage-research#readme" target="_blank">Read Documentation</a> | 
+        🎓 <a href="https://github.com/obizues/agentic-mortgage-research/blob/main/ARCHITECTURE.md" target="_blank">View Architecture</a>
+        </p>
     </div>
     """,
     unsafe_allow_html=True
 )
 st.sidebar.info("App version: v1.2.0 - Multi-Agent Perspectives")
+
+with st.sidebar.expander("ℹ️ About This Project", expanded=False):
+    st.markdown(
+        """
+        **Portfolio Project**
+        
+        This is a demonstration of **agentic AI architecture** built to showcase:
+        - Multi-agent LLM orchestration
+        - Real-time UI with streaming updates
+        - Production-grade patterns
+        - System design thinking
+        
+        **Target Audience**: Recruiters, CTOs, hiring managers evaluating VP/Head of Engineering candidates.
+        
+        **What This Demonstrates**:
+        - Deep LLM integration (Claude 3.5)
+        - Multi-agent role systems
+        - Clean architecture & documentation
+        - Technical leadership capabilities
+        """
+    )
+
+with st.sidebar.expander("📂 Project Documentation", expanded=False):
+    st.markdown(
+        """
+        **GitHub Repository**
+        🔗 [github.com/obizues/agentic-mortgage-research](https://github.com/obizues/agentic-mortgage-research)
+        
+        **Documentation**
+        - 📖 [README.md](https://github.com/obizues/agentic-mortgage-research#readme) - Project overview, quick start, features
+        - 🏗️ [ARCHITECTURE.md](https://github.com/obizues/agentic-mortgage-research/blob/main/ARCHITECTURE.md) - Deep technical documentation
+        - 📊 [System Diagrams](https://github.com/obizues/agentic-mortgage-research#-architecture) - 5 Mermaid diagrams
+        
+        **Key Sections**:
+        - Multi-agent system design
+        - LLM integration strategy
+        - Production deployment guide
+        - Architectural decision records
+        """
+    )
+
 with st.sidebar.expander("Tech Stack", expanded=False):
     st.markdown(
         """
@@ -203,6 +270,42 @@ if st.session_state.first_run:
             st.error(f"Error running agentic plan: {e}")
     st.session_state.first_run = False
 
+# ---------- System Status (After First Run) ----------
+with st.sidebar.expander("🔧 System Status", expanded=False):
+    # LLM Status
+    llm_status = "🟢 LLM Available" if config.ENABLE_LLM_PLANNING else "🔴 Heuristic Mode"
+    st.markdown(f"**LLM Status**: {llm_status}")
+    
+    # Data freshness
+    timestamps = agent.knowledge.get("fetch_timestamps", {})
+    if timestamps:
+        for key, ts in timestamps.items():
+            age_hours = (pd.Timestamp.now() - ts).total_seconds() / 3600
+            freshness = "Fresh" if age_hours < 24 else "Stale"
+            st.markdown(f"**{key.replace('_', ' ').title()}**: {freshness} ({age_hours:.1f}h ago)")
+    else:
+        st.markdown("**Data Status**: No data fetched yet")
+    
+    # Session stats
+    log_count = len(agent.logs)
+    st.markdown(f"**Log Entries**: {log_count}")
+    
+    # Cost estimate (rough)
+    if config.ENABLE_LLM_PLANNING:
+        st.markdown("**Est. Cost/Run**: ~$0.011 (5 LLM calls)")
+
+# ---------- Quick Stats Badge ----------
+st.markdown(
+    """
+    <div style='text-align: center; margin: 20px 0;'>
+        <span class='stats-badge'><span class='status-indicator status-online'></span>Multi-Agent System</span>
+        <span class='stats-badge'>📊 3 Specialized Perspectives</span>
+        <span class='stats-badge'>🤖 Claude 3.5 Powered</span>
+        <span class='stats-badge'>⚡ Live Execution Tracking</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # ---------- Executive Summary ----------
 st.subheader("📊 Executive Summary")
@@ -257,7 +360,7 @@ if "mortgage_rates" in agent.knowledge and not agent.knowledge["mortgage_rates"]
             y='rate:Q',
             tooltip=['date:T', 'rate:Q']
         ).properties(title='30-Year Fixed Mortgage Rates', height=300),
-        use_container_width=True
+        width='stretch'
     )
 
 # Home Prices Chart
@@ -269,7 +372,7 @@ if "home_prices" in agent.knowledge and not agent.knowledge["home_prices"].empty
             y='price:Q',
             tooltip=['date:T', 'price:Q']
         ).properties(title='US Home Prices Index', height=300),
-        use_container_width=True
+        width='stretch'
     )
 
 # Combined normalized chart
@@ -293,7 +396,7 @@ if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
         color='Metric:N',
         tooltip=['date:T', 'Metric:N', 'Value:Q']
     ).properties(title='Normalized Mortgage Rates vs Home Prices', height=300)
-    st.altair_chart(chart_combined, use_container_width=True)
+    st.altair_chart(chart_combined, width='stretch')
 
 # ---------- Agent Logs ----------
 
