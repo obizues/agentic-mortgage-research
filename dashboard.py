@@ -4,6 +4,7 @@ import pandas as pd
 import altair as alt
 import AgenticMortgageResearchAgent
 import config
+st.sidebar.info("App version: v1.1.0")
 
 # Initialize LLM client if API key is available
 llm_client = None
