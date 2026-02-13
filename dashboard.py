@@ -4,6 +4,102 @@ import pandas as pd
 import altair as alt
 import AgenticMortgageResearchAgent
 import config
+import streamlit as st
+
+# --- Fintech Style Header & Personal Branding ---
+st.set_page_config(page_title="Agentic Mortgage Research", page_icon="🏦", layout="wide")
+
+# LinkedIn profile picture (direct link, may need update if LinkedIn changes)
+st.image("https://media.licdn.com/dms/image/C5603AQFvQwKkQKJQwA/profile-displayphoto-shrink_200_200/0/1516246878572?e=1718841600&v=beta&t=QwKkQKJQwA", width=120)
+
+st.markdown(
+    """
+    <style>
+        .fintech-header {
+            background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%);
+            color: white;
+            padding: 24px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 2rem;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(10, 116, 218, 0.15);
+        }
+        .fintech-footer {
+            margin-top: 32px;
+            padding: 12px 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            color: #0a74da;
+            text-align: center;
+        }
+        .brand-block {
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #eafaf1;
+            border-radius: 8px;
+            color: #0a74da;
+            font-size: 1.15rem;
+        }
+    </style>
+    <div class="fintech-header">
+        🏦 Agentic Mortgage Research Dashboard
+    </div>
+    <div class="brand-block">
+        <b>Chris Obermeier</b> <br>
+        <span style="font-size:1.05rem;">VP Engineering | AI Product Leader | Mortgage Tech Innovator</span><br>
+        <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | <a href="https://github.com/obizues" target="_blank">GitHub</a>
+    </div>
+    <div class="brand-block">
+        <b>Contact:</b> <a href="mailto:chris.obermeier@gmail.com">chris.obermeier@gmail.com</a><br>
+        <b>About:</b> Experienced engineering leader specializing in AI, fintech, and mortgage technology. Passionate about building agentic systems that drive business value and innovation.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+import streamlit as st
+
+# --- Fintech Style Header ---
+st.markdown(
+    """
+    <style>
+        .fintech-header {
+            background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%);
+            color: white;
+            padding: 24px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 2rem;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(10, 116, 218, 0.15);
+        }
+        .fintech-footer {
+            margin-top: 32px;
+            padding: 12px 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            color: #0a74da;
+            text-align: center;
+        }
+    </style>
+    <div class="fintech-header">
+        🏦 Agentic Mortgage Research Dashboard
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+# --- Prominent User Info ---
+st.markdown(
+    """
+    <div class="fintech-footer">
+        Built by <b>Chris Obermeier</b> | <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | <a href="https://github.com/obizues" target="_blank">GitHub</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 st.sidebar.info("App version: v1.1.0")
 
 # Initialize LLM client if API key is available
