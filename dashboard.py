@@ -55,7 +55,8 @@ if st.session_state.first_run:
     st.session_state.first_run = False
 
 # ---------- Sidebar ----------
-st.sidebar.title("Agent Actions")
+
+st.sidebar.title("Agent Controls")
 force_refresh = st.sidebar.checkbox("Force refresh", value=False)
 
 def run_action_ui(action_name, use_spinner=True):
@@ -68,21 +69,11 @@ def run_action_ui(action_name, use_spinner=True):
     except Exception as e:
         st.error(f"Error running {action_name}: {e}")
 
-# Core actions
-if st.sidebar.button("Fetch Mortgage Rates"):
-    run_action_ui("fetch_mortgage_rates")
-if st.sidebar.button("Analyze Rates"):
-    run_action_ui("analyze_rates")
-if st.sidebar.button("Fetch Home Prices"):
-    run_action_ui("fetch_home_prices")
-if st.sidebar.button("Compare with Home Prices"):
-    run_action_ui("compare_with_home_prices")
-if st.sidebar.button("Summarize Insights"):
-    run_action_ui("summarize_insights")
+# Streamlined actions
 if st.sidebar.button("Agentic Plan"):
     run_action_ui("agentic_plan")
-
-# Clear logs
+if st.sidebar.button("Summarize Insights"):
+    run_action_ui("summarize_insights")
 if st.sidebar.button("Clear Logs"):
     agent.logs.clear()
     st.session_state.logs_text = []
