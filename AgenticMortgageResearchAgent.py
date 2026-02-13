@@ -1,4 +1,5 @@
 import pandas as pd
+import config
 import requests
 from io import StringIO
 from datetime import datetime, timedelta
@@ -10,6 +11,7 @@ except ImportError:
     Anthropic = None
 
 class AgenticMortgageResearchAgent:
+    import config
     def __init__(self, log_callback=None, llm_client: Optional['Anthropic'] = None):
         self.goal = "Understand current US mortgage rate trends and risks"
         self.knowledge = {}
@@ -58,6 +60,13 @@ class AgenticMortgageResearchAgent:
     def _llm_based_plan(self, force=False):
         """Use Claude to decide which actions should be executed."""
         try:
+            # Log Anthropic SDK version
+            try:
+                import anthropic
+                sdk_version = getattr(anthropic, '__version__', 'unknown')
+                self.log(f"Anthropic SDK version: {sdk_version}")
+            except Exception as sdk_e:
+                self.log(f"Could not determine Anthropic SDK version: {sdk_e}")
             # Build context about current knowledge state
             state_summary = self._get_knowledge_state_summary()
             
@@ -81,11 +90,15 @@ Based on the state above, return a JSON object with:
 
 Only include actions that should be run. Skip actions if data is recent and unchanged."""
 
-            message = self.llm_client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=500,
-                messages=[{"role": "user", "content": prompt}]
-            )
+            try:
+                message = self.llm_client.messages.create(
+                    model=config.MODEL_NAME,
+                    max_tokens=500,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+            except Exception as conn_e:
+                self.log(f"LLM connection error: {conn_e}")
+                raise
             
             response_text = message.content[0].text
             # Extract JSON from response
@@ -354,7 +367,7 @@ Based on this data, provide:
 Keep the response concise and actionable."""
 
             message = self.llm_client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model=config.MODEL_NAME,
                 max_tokens=400,
                 messages=[{"role": "user", "content": prompt}]
             )

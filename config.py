@@ -13,7 +13,7 @@ except (ImportError, AttributeError):
     # If not in Streamlit context, just use environment variables
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
-MODEL_NAME = "claude-3-5-sonnet-20241022"
+MODEL_NAME = "claude-3-haiku-20240307"
 
 # Agent Configuration
 CACHE_VALIDITY_HOURS = 24
