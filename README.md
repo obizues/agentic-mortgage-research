@@ -51,12 +51,17 @@ The agent follows a intelligent decision flow:
    pip install -r requirements.txt
    ```
 
-3. **Configure API key**:
-   - Copy `.env.example` to `.env`
-   - Add your Anthropic API key:
-     ```
-     ANTHROPIC_API_KEY=sk-ant-xxx...
-     ```
+   The requirements file is pinned to the exact package versions used in the current environment.
+
+3. **Configure API key** (choose one):
+    - **Streamlit secrets** (local): edit `.streamlit/secrets.toml` and set:
+       ```toml
+       ANTHROPIC_API_KEY = "sk-ant-xxx..."
+       ```
+    - **Environment file**: copy `.env.example` to `.env` and set:
+       ```
+       ANTHROPIC_API_KEY=sk-ant-xxx...
+       ```
 
 4. **Run the dashboard**:
    ```bash
@@ -245,6 +250,10 @@ Edit the `config.py` and set `ENABLE_LLM_PLANNING = False` to test heuristic vs 
 - **Data**: pandas, FRED Economic Data API
 - **Visualization**: Streamlit, Altair
 - **Language**: Python 3.8+
+
+### Pinned Dependencies
+
+The exact installed dependency set is captured in [requirements.txt](requirements.txt) to ensure reproducible runs.
 
 ---
 

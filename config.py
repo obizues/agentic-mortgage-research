@@ -4,13 +4,20 @@ from dotenv import load_dotenv
 # Load environment variables from .env file if it exists
 load_dotenv()
 
-# Try to get API key from Streamlit secrets first (for deployed apps)
-# then fall back to environment variables (for local development)
+# Try to get API key from Streamlit secrets first (for deployed apps),
+# then fall back to environment variables (for local development).
 try:
     import streamlit as st
-    ANTHROPIC_API_KEY = st.secrets.get("ANTHROPIC_API_KEY", os.getenv("ANTHROPIC_API_KEY"))
+    from streamlit.errors import StreamlitSecretNotFoundError
+
+    try:
+        secrets_value = st.secrets.get("ANTHROPIC_API_KEY")
+    except StreamlitSecretNotFoundError:
+        secrets_value = None
+
+    ANTHROPIC_API_KEY = secrets_value or os.getenv("ANTHROPIC_API_KEY")
 except (ImportError, AttributeError):
-    # If not in Streamlit context, just use environment variables
+    # If not in Streamlit context, just use environment variables.
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 MODEL_NAME = "claude-3-haiku-20240307"
