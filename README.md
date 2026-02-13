@@ -54,10 +54,11 @@ The agent follows a intelligent decision flow:
    The requirements file is pinned to the exact package versions used in the current environment.
 
 3. **Configure API key** (choose one):
-    - **Streamlit secrets** (local): edit `.streamlit/secrets.toml` and set:
+    - **Streamlit secrets** (local): create `.streamlit/secrets.toml` and set:
        ```toml
        ANTHROPIC_API_KEY = "sk-ant-xxx..."
        ```
+      This file is ignored by git and must be created on each local machine.
     - **Environment file**: copy `.env.example` to `.env` and set:
        ```
        ANTHROPIC_API_KEY=sk-ant-xxx...
