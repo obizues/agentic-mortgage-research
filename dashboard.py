@@ -24,14 +24,12 @@ st.set_page_config(page_title=config.STREAMLIT_PAGE_TITLE, layout=config.STREAML
 st.title("🏠 Agentic Mortgage Research Agent Dashboard")
 
 # ---------- Session State ----------
+
 if "agent" not in st.session_state:
     def ui_log_callback(msg):
         if "logs_text" not in st.session_state:
             st.session_state.logs_text = []
         st.session_state.logs_text.append(msg)
-        # Update placeholder for logs if it has been created
-        if st.session_state.get("logs_area") is not None:
-            st.session_state.logs_area.text("\n".join(st.session_state.logs_text))
 
     st.session_state.agent = AgenticMortgageResearchAgent(log_callback=ui_log_callback, llm_client=llm_client)
     st.session_state.logs_text = []
@@ -40,10 +38,6 @@ else:
     st.session_state.first_run = False
 
 agent = st.session_state.agent
-
-# Initialize logs_area as None (will be created before it's needed for display)
-if "logs_area" not in st.session_state:
-    st.session_state.logs_area = None
 
 # Run agentic plan on first load
 if st.session_state.first_run:
@@ -77,7 +71,6 @@ if st.sidebar.button("Summarize Insights"):
 if st.sidebar.button("Clear Logs"):
     agent.logs.clear()
     st.session_state.logs_text = []
-    st.session_state.logs_area.text("")
 
 # ---------- Executive Summary ----------
 st.subheader("📊 Executive Summary")
@@ -134,10 +127,7 @@ if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
     st.altair_chart(chart_combined, use_container_width=True)
 
 # ---------- Agent Logs ----------
-st.subheader("📝 Agent Logs")
 
-# Create logs placeholder (will be used for real-time updates on button clicks)
-if st.session_state.logs_area is None:
-    st.session_state.logs_area = st.empty()
-
-st.session_state.logs_area.text("\n".join(agent.logs))
+# Move logs to sidebar expander
+with st.sidebar.expander("📝 Agent Logs", expanded=False):
+    st.text("\n".join(agent.logs))
