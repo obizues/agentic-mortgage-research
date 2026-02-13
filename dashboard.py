@@ -11,6 +11,9 @@ st.set_page_config(page_title=config.STREAMLIT_PAGE_TITLE, page_icon="🏦", lay
 st.markdown(
     """
     <style>
+        .stButton > button {
+            font-size: 0.9rem;
+        }
         .fintech-header {
             background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%);
             color: white;
@@ -58,6 +61,21 @@ st.markdown(
     unsafe_allow_html=True
 )
 st.sidebar.info("App version: v1.1.0")
+with st.sidebar.expander("Tech Stack", expanded=False):
+    st.markdown(
+        """
+        **Tech Stack**
+        - Python 3.x
+        - Anthropic Claude (LLM)
+        - FRED API + pandas
+        - Streamlit + Altair
+
+        **Agentic AI**
+        - LLM-driven planning
+        - Multi-step orchestration
+        - Transparent decision logs
+        """
+    )
 
 # Initialize LLM client if API key is available
 llm_client = None
@@ -88,6 +106,20 @@ else:
 
 agent = st.session_state.agent
 
+# ---------- Sidebar ----------
+
+with st.sidebar.expander("Agent Controls", expanded=False):
+    force_refresh = st.checkbox("Force refresh", value=False)
+
+    # Streamlined actions
+    if st.button("Agentic Plan"):
+        run_action_ui("agentic_plan")
+    if st.button("Summarize Insights"):
+        run_action_ui("summarize_insights")
+    if st.button("Clear Logs"):
+        agent.logs.clear()
+        st.session_state.logs_text = []
+
 # Run agentic plan on first load
 if st.session_state.first_run:
     with st.spinner("🤖 Agent is analyzing mortgage market..."):
@@ -96,11 +128,6 @@ if st.session_state.first_run:
         except Exception as e:
             st.error(f"Error running agentic plan: {e}")
     st.session_state.first_run = False
-
-# ---------- Sidebar ----------
-
-st.sidebar.title("Agent Controls")
-force_refresh = st.sidebar.checkbox("Force refresh", value=False)
 
 def run_action_ui(action_name, use_spinner=True):
     try:
@@ -112,14 +139,6 @@ def run_action_ui(action_name, use_spinner=True):
     except Exception as e:
         st.error(f"Error running {action_name}: {e}")
 
-# Streamlined actions
-if st.sidebar.button("Agentic Plan"):
-    run_action_ui("agentic_plan")
-if st.sidebar.button("Summarize Insights"):
-    run_action_ui("summarize_insights")
-if st.sidebar.button("Clear Logs"):
-    agent.logs.clear()
-    st.session_state.logs_text = []
 
 # ---------- Executive Summary ----------
 st.subheader("📊 Executive Summary")

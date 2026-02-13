@@ -2,6 +2,22 @@
 
 A hands-on AI project demonstrating **intelligent agent reasoning** with real LLM integration. This agent autonomously researches US mortgage rates and home prices, uses Claude AI to make intelligent decisions about data fetching, and generates insightful analysis.
 
+## ✅ Tech Stack (Recruiter Friendly)
+
+- **Language**: Python 3.x
+- **LLM**: Anthropic Claude (planning + insights)
+- **Data**: FRED API, pandas, requests
+- **Visualization/UI**: Streamlit, Altair
+- **Agent Orchestration**: Custom agent planner + knowledge base
+- **Config/Security**: python-dotenv, Streamlit secrets
+
+## 🤖 Agentic AI Highlights
+
+- LLM-driven planning decides which actions run based on state.
+- Multi-step orchestration: plan → execute → analyze → summarize.
+- Transparent logs show decision trace in the UI.
+- Graceful fallback to heuristics when LLM is unavailable.
+
 ## 🎯 What This Demonstrates
 
 ### ✅ Hands-On AI Capabilities
@@ -70,6 +86,26 @@ The agent follows a intelligent decision flow:
    ```
    
    The dashboard opens at `http://localhost:8501`
+
+### Local Secrets Quickstart
+
+After you pull the repo on a new machine, copy the template secrets file and add your key:
+
+```bash
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+```
+
+Then edit `.streamlit/secrets.toml` and set:
+
+```toml
+ANTHROPIC_API_KEY = "sk-ant-xxx..."
+```
+
+### First Run Checklist
+
+- Create `.streamlit/secrets.toml` (from the example) or set `.env` with `ANTHROPIC_API_KEY`.
+- Install dependencies with `pip install -r requirements.txt`.
+- Start the app with `python run_dashboard.py`.
 
 ---
 
