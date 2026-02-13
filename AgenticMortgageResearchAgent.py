@@ -69,6 +69,7 @@ class AgenticMortgageResearchAgent:
                 self.log(f"Could not determine Anthropic SDK version: {sdk_e}")
             # Build context about current knowledge state
             state_summary = self._get_knowledge_state_summary()
+            self.log("LLM planning: state summary prepared.")
             
             prompt = f"""You are an intelligent mortgage research agent. Based on the current knowledge state, decide which actions to run:
 
@@ -110,6 +111,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
                     actions = plan.get("actions", [])
                     reasoning = plan.get("reasoning", "")
                     self.log(f"LLM Decision: {reasoning}")
+                    self.log(f"LLM Actions: {', '.join(actions) if actions else 'none'}")
                 else:
                     self.log("Could not parse LLM response, falling back to heuristics")
                     return self._heuristic_plan(force)
@@ -126,6 +128,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
             
             # Always summarize at the end
             if "summarize_insights" not in actions:
+                self.log("LLM Plan: appending summarize_insights")
                 self.run_action("summarize_insights", force=force)
             
             self.log("🤖 LLM-based planning finished.")

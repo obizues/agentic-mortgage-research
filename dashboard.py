@@ -12,7 +12,13 @@ st.markdown(
     """
     <style>
         .stButton > button {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            line-height: 1.1;
+            padding: 0.25rem 0.6rem;
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;
+            min-height: 2.2rem;
         }
         .fintech-header {
             background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%);
@@ -71,9 +77,20 @@ with st.sidebar.expander("Tech Stack", expanded=False):
         - Streamlit + Altair
 
         **Agentic AI**
-        - LLM-driven planning
-        - Multi-step orchestration
-        - Transparent decision logs
+        - Claude-driven planning
+        - Orchestrated action chain
+        - UI decision logs
+        """
+    )
+
+with st.sidebar.expander("System Design Notes", expanded=False):
+    st.markdown(
+        """
+        - **Orchestration**: LLM selects actions from current knowledge state and runs them in order.
+        - **Caching**: fetch timestamps prevent unnecessary API calls.
+        - **Resilience**: heuristic planner runs if LLM is unavailable.
+        - **Observability**: decision trace is logged and visible in the UI.
+        - **Security**: API keys managed via local secrets or environment variables.
         """
     )
 
@@ -114,7 +131,7 @@ with st.sidebar.expander("Agent Controls", expanded=False):
     # Streamlined actions
     if st.button("Agentic Plan"):
         run_action_ui("agentic_plan")
-    if st.button("Summarize Insights"):
+    if st.button("Summarize", help="Summarize Insights"):
         run_action_ui("summarize_insights")
     if st.button("Clear Logs"):
         agent.logs.clear()
@@ -198,4 +215,12 @@ if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
 
 # Move logs to sidebar expander
 with st.sidebar.expander("📝 Agent Logs", expanded=False):
-    st.text("\n".join(agent.logs))
+    st.caption("Decision trace (most recent entries)")
+    show_llm_only = st.checkbox("Show LLM decisions only", value=False)
+    if show_llm_only:
+        filtered_logs = [log for log in agent.logs if "LLM" in log]
+        recent_logs = filtered_logs[-100:]
+        st.text("\n".join(recent_logs) or "No LLM decisions yet.")
+    else:
+        recent_logs = agent.logs[-200:]
+        st.text("\n".join(recent_logs) or "No agent decisions yet.")
