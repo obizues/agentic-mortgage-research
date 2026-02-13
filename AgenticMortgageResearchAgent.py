@@ -50,6 +50,7 @@ class AgenticMortgageResearchAgent:
     def agentic_plan(self, force=False):
         """Automatically decide which actions to run based on current knowledge."""
         self.log("🤖 Agentic planning started...")
+        self.log("📊 Planner: Evaluating system state and data freshness...")
         
         # Use LLM-based planning if available, otherwise fall back to heuristics
         if self.llm_client:
@@ -250,6 +251,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
     def fetch_mortgage_rates(self, force=False):
         if "mortgage_rates" in self.knowledge and not force:
             return "Mortgage rates already loaded."
+        self.log("📈 Data Collector: Fetching mortgage rates from FRED API...")
         url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"
         response = requests.get(url)
         response.raise_for_status()
@@ -264,6 +266,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
     def analyze_rates(self, force=False):
         if "mortgage_rates" not in self.knowledge or force:
             self.fetch_mortgage_rates(force=force)
+        self.log("🔍 Market Analyst: Analyzing mortgage rate trends...")
         df = self.knowledge["mortgage_rates"].sort_values("date")
         latest = df.iloc[-1]
         prior = df.iloc[-2]
@@ -280,6 +283,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
     def fetch_home_prices(self, force=False):
         if "home_prices" in self.knowledge and not force:
             return "Home prices already loaded."
+        self.log("📈 Data Collector: Fetching home price data from FRED API...")
         url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CSUSHPINSA"
         response = requests.get(url)
         response.raise_for_status()
@@ -296,6 +300,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
             self.fetch_mortgage_rates(force=force)
         if "home_prices" not in self.knowledge or force:
             self.fetch_home_prices(force=force)
+        self.log("⚖️ Market Analyst: Correlating rates with home price trends...")
         m = self.knowledge["mortgage_rates"].sort_values("date")
         h = self.knowledge["home_prices"].sort_values("date")
         merged = pd.merge_asof(m, h, on="date")
@@ -317,9 +322,17 @@ Only include actions that should be run. Skip actions if data is recent and unch
         
         # Use LLM for insights if available, otherwise use simple summary
         if self.llm_client:
-            return self._llm_based_insights()
+            summary = self._llm_based_insights()
         else:
-            return self._simple_summary()
+            summary = self._simple_summary()
+
+        if "role_insights" not in self.knowledge or force:
+            if self.llm_client:
+                self._llm_role_insights()
+            else:
+                self._simple_role_insights()
+
+        return summary
     
     def _simple_summary(self):
         """Generate basic summary from data."""
@@ -336,6 +349,7 @@ Only include actions that should be run. Skip actions if data is recent and unch
     
     def _llm_based_insights(self):
         """Use Claude to generate sophisticated insights from mortgage and housing data."""
+        self.log("💡 Senior Analyst: Generating market insights with Claude...")
         try:
             # Gather all available data for analysis
             rate_insights = self.knowledge.get("rate_insights", {})
@@ -383,3 +397,81 @@ Keep the response concise and actionable."""
         except Exception as e:
             self.log(f"LLM insights generation failed: {str(e)}. Using simple summary.")
             return self._simple_summary()
+
+    def _simple_role_insights(self):
+        """Generate basic role-based perspectives without an LLM."""
+        rate_insights = self.knowledge.get("rate_insights", {})
+        comparison = self.knowledge.get("comparison", "No price comparison available")
+        summary = self.knowledge.get("summary", "No summary available")
+
+        roles = {
+            "Planner": (
+                "Prioritize actions based on data freshness and impact. "
+                "Refresh rates if stale; re-check prices if rates moved >0.25%."
+            ),
+            "Market Analyst": (
+                f"Current rate {rate_insights.get('latest_rate', 'N/A')}% vs 12-mo avg "
+                f"{rate_insights.get('12_month_avg', 'N/A')}%. {comparison}"
+            ),
+            "Risk Officer": (
+                "Watch for rapid rate shifts and affordability risk. "
+                "Validate data recency before decisions."
+            ),
+        }
+
+        self.knowledge["role_insights"] = roles
+        self.log("Role perspectives generated (heuristic).")
+
+    def generate_role_perspectives(self, force=False):
+        """Public action to generate multi-agent role perspectives."""
+        if not force and "role_insights" in self.knowledge:
+            return "Multi-agent perspectives already generated."
+        
+        if self.llm_client is None:
+            return "LLM client not available. Cannot generate role perspectives."
+        
+        self._llm_role_insights()
+        return "Multi-agent perspectives generated successfully."
+
+    def _llm_role_insights(self):
+        """Generate role-based perspectives using Claude."""
+        self.log("🧠 Multi-Agent: Generating role-specific perspectives...")
+        rate_insights = self.knowledge.get("rate_insights", {})
+        comparison = self.knowledge.get("comparison", "No price comparison available")
+        summary = self.knowledge.get("summary", "No summary available")
+
+        role_prompts = {
+            "Planner": "You are an agent planner. Focus on action selection and sequencing.",
+            "Market Analyst": "You are a mortgage market analyst. Focus on data interpretation.",
+            "Risk Officer": "You are a risk officer. Focus on risk signals and guardrails.",
+        }
+
+        role_emojis = {
+            "Planner": "📊",
+            "Market Analyst": "📉",
+            "Risk Officer": "🛡️"
+        }
+
+        role_outputs = {}
+        for role, role_prompt in role_prompts.items():
+            self.log(f"{role_emojis[role]} {role}: Analyzing data and generating perspective...")
+            
+            prompt = f"""{role_prompt}
+
+Context:
+- Summary: {summary}
+- Current 30-year rate: {rate_insights.get('latest_rate', 'N/A')}%
+- 12-month average: {rate_insights.get('12_month_avg', 'N/A')}%
+- Trend signal: {rate_insights.get('trend_signal', 'N/A')}
+- Housing: {comparison}
+
+Provide 2-3 concise bullet points for your perspective."""
+
+            message = self.llm_client.messages.create(
+                model=config.MODEL_NAME,
+                max_tokens=250,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            role_outputs[role] = message.content[0].text.strip()
+
+        self.knowledge["role_insights"] = role_outputs

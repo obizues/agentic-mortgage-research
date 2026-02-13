@@ -13,10 +13,12 @@ A hands-on AI project demonstrating **intelligent agent reasoning** with real LL
 
 ## 🤖 Agentic AI Highlights
 
-- LLM-driven planning using Claude (model set in `config.MODEL_NAME`).
-- Orchestration selects actions from the knowledge state and runs them in sequence.
-- Decision trace is logged in the UI for transparency.
-- Graceful fallback to heuristics when LLM is unavailable.
+- **Multi-Agent Architecture**: Three specialized roles (Planner, Market Analyst, Risk Officer) provide diverse perspectives on market data
+- **LLM-Driven Planning**: Claude decides which actions to execute based on knowledge state
+- **Real-Time Visualization**: Color-coded perspective cards with markdown rendering
+- **Orchestration**: Selects actions from knowledge state and runs them in sequence
+- **Decision Transparency**: Complete decision trace logged in UI with emoji-based filtering
+- **Graceful Fallback**: Heuristics when LLM unavailable
 
 ## 🎯 What This Demonstrates
 
@@ -42,10 +44,15 @@ The agent follows a intelligent decision flow:
 
 ### Key Features
 - **LLM Planning**: Claude decides what data to fetch based on knowledge state
+- **Multi-Agent Perspectives**: Three specialized roles analyze the same data:
+  - **📊 Planner**: Focuses on action selection and sequencing
+  - **📉 Market Analyst**: Interprets data and identifies trends
+  - **🛡️ Risk Officer**: Evaluates risks and establishes guardrails
 - **LLM Insights**: Claude analyzes data and generates actionable insights
+- **Dynamic UI**: Color-coded perspective cards with HTML/CSS styling and markdown rendering
 - **Graceful Fallback**: If LLM unavailable, uses heuristic-based planning
-- **Real-Time Logging**: Transparent decision-making visible in UI
-- **Interactive Dashboard**: Streamlit UI with force refresh, real-time visualizations
+- **Real-Time Logging**: Transparent decision-making with emoji-filtered role execution tracking
+- **Interactive Dashboard**: Streamlit UI with granular controls (Agentic Plan, Regenerate Summary, Regenerate Perspectives)
 
 ---
 
@@ -120,10 +127,17 @@ ANTHROPIC_API_KEY = "sk-ant-xxx..."
 - Heuristic fallback: Works without LLM using rule-based logic
 
 **Dashboard** (`dashboard.py`)
-- Streamlit UI with real-time updates
+- Streamlit UI with real-time updates and status widget
+- Multi-agent perspectives displayed in color-coded cards (blue/green/red themes)
+- Markdown-to-HTML conversion for proper formatting of LLM outputs
 - Data visualizations (mortgage rates, home prices, normalized comparison)
-- Agent logs showing decision-making process
-- Interactive controls for manual actions
+- Agent logs with 3-way filtering (All logs / LLM decisions / Role outputs)
+- Interactive controls:
+  - **Agentic Plan**: Full orchestration (respects force refresh checkbox)
+  - **Regenerate Summary**: Always creates fresh summary
+  - **Regenerate Perspectives**: Always generates new role perspectives
+  - **Clear Logs**: Resets decision trace
+- Collapsible sidebar sections (Tech Stack, System Design, Agent Controls, Logs)
 
 **Configuration** (`config.py`)
 - Centralized settings (API keys, cache windows, thresholds)
@@ -178,6 +192,27 @@ You are a mortgage market analyst. Analyze the following data:
 Provide assessment, implications for homebuyers, and key insight.
 ```
 
+### Multi-Agent Perspectives
+
+The system generates three specialized perspectives on the same data:
+
+**📊 Planner**
+- Analyzes action selection and sequencing decisions
+- Evaluates system state and workflow optimization
+- Focuses on orchestration strategy
+
+**📉 Market Analyst**
+- Interprets mortgage rate trends and economic signals
+- Identifies market patterns and correlations
+- Provides data-driven market insights
+
+**🛡️ Risk Officer**
+- Assesses risk signals and market volatility
+- Establishes guardrails and safety thresholds
+- Highlights potential concerns for stakeholders
+
+Each role receives the same context (summary, rates, trends, home prices) but responds from their professional perspective with 2-3 concise bullet points. This demonstrates a sophisticated multi-agent architecture where diverse viewpoints enhance analysis quality.
+
 ---
 
 ## 📈 How the Agent Reasons
@@ -227,22 +262,26 @@ MODEL_NAME = "claude-3-5-sonnet-20241022"
 ## 🔍 Monitoring & Logs
 
 The dashboard displays:
-- 📊 Live data visualizations
-- 📝 Agent logs with timestamps showing:
-  - What the LLM decided
-  - Which actions were executed
-  - Why decisions were made
+- 📊 Live data visualizations (rates, prices, normalized comparison)
+- 🧠 Multi-agent perspectives in color-coded cards
+- 📝 Agent logs with timestamps and 3-way filtering:
+  - **All logs**: Complete decision trace
+  - **LLM decisions only**: Claude's planning and reasoning
+  - **Role outputs only**: Emoji-tagged role execution (📊📉🛡️📈🔍💡🧠)
+- 🚨 Real-time status widget during agent execution
 - ⚠️ Error messages with fallback behavior
 
 Example log output:
 ```
-[14:23:45] 🤖 Agentic planning started...
-[14:23:45] LLM Decision: Mortgage rates >24h old and home prices need refresh
+[14:23:45] 📊 Planner: Evaluating system state and data freshness...
+[14:23:46] 📈 Data Collector: Fetching mortgage rates from FRED...
 [14:23:47] Running action: fetch_mortgage_rates (force=False)
 [14:23:48] Mortgage rates fetched.
-[14:23:49] Running action: analyze_rates (force=False)
-[14:23:50] LLM-based insights generated.
-[14:23:50] 🤖 LLM-based planning finished.
+[14:23:49] 🔍 Market Analyst: Analyzing mortgage rate trends...
+[14:23:50] 📊 Planner: Analyzing data and generating perspective...
+[14:23:51] 📉 Market Analyst: Analyzing data and generating perspective...
+[14:23:52] 🛡️ Risk Officer: Analyzing data and generating perspective...
+[14:23:53] Multi-agent perspectives generated successfully.
 ```
 
 ---
@@ -263,34 +302,43 @@ Edit the `config.py` and set `ENABLE_LLM_PLANNING = False` to test heuristic vs 
 ## 🎓 Learning & Extension Points
 
 ### What I Built
-1. **Multi-Step Agent Orchestration**: Planning → Execution → Analysis → UI
-2. **LLM Integration Patterns**: Prompting for structured decisions + JSON parsing
-3. **Graceful Degradation**: Full functionality with or without LLM
-4. **Real Data Pipelines**: API integration, caching, error handling
-5. **Intelligent Reasoning**: Agent makes decisions, humans don't hardcode them
+1. **Multi-Agent Architecture**: Three specialized roles providing diverse analytical perspectives
+2. **Multi-Step Agent Orchestration**: Planning → Execution → Analysis → UI
+3. **LLM Integration Patterns**: Prompting for structured decisions + insights generation
+4. **Real-Time UI Feedback**: Emoji-based role tracking with status widgets and callbacks
+5. **Dynamic Content Rendering**: Markdown-to-HTML conversion for formatted LLM outputs
+6. **Graceful Degradation**: Full functionality with or without LLM
+7. **Real Data Pipelines**: API integration, caching, error handling
+8. **Intelligent Reasoning**: Agent makes decisions, humans don't hardcode them
 
 ### Future Enhancements
+- [ ] Add more specialized roles (Technical Analyst, Economic Forecaster)
+- [ ] Implement role debate/consensus mechanisms
 - [ ] Persistence layer (save/load agent state)
 - [ ] Multi-turn LLM conversations for complex analysis
 - [ ] Async action execution for faster processing
-- [ ] More data sources (unemployment, inflation, etc.)
+- [ ] More data sources (unemployment, inflation, consumer sentiment)
 - [ ] Risk modeling with LLM-based scenario analysis
+- [ ] Historical perspective comparisons (track how analysis changes over time)
 - [ ] Unit tests with mocked FRED API responses
 - [ ] Docker containerization
 - [ ] CI/CD pipeline
 
 ---
 
-## 📚 Tech Stack
+## 📚 Tech Stack Details
 
-- **LLM**: Anthropic Claude 3.5 Sonnet
-- **Data**: pandas, FRED Economic Data API
-- **Visualization**: Streamlit, Altair
-- **Language**: Python 3.8+
+- **Language**: Python 3.14+ (virtual environment)
+- **LLM**: Anthropic Claude 3.5 (claude-3-haiku-20240307 for perspectives)
+- **Data**: pandas 2.3.3, FRED Economic Data API, requests 2.32.5
+- **Visualization/UI**: Streamlit 1.54.0, Altair 6.0.0
+- **Agent Orchestration**: Custom multi-agent planner with role-based perspectives
+- **UI Rendering**: HTML/CSS for dynamic styled components
+- **Config/Security**: python-dotenv 1.2.1, Streamlit secrets (.gitignored)
 
 ### Pinned Dependencies
 
-The exact installed dependency set is captured in [requirements.txt](requirements.txt) to ensure reproducible runs.
+The exact installed dependency set (51 packages) is captured in [requirements.txt](requirements.txt) to ensure reproducible runs across environments.
 
 ---
 
