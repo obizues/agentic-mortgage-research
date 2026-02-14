@@ -35,7 +35,12 @@ CACHE_VALIDITY_HOURS = 24
 RATE_CHANGE_THRESHOLD = 0.25  # percentage point
 
 # Local cost guardrails
-RUNNING_IN_CLOUD = os.getenv("STREAMLIT_CLOUD", "").lower() == "true"
+# Detect Streamlit Cloud by checking for typical Cloud paths or env vars
+RUNNING_IN_CLOUD = (
+    os.getenv("STREAMLIT_SHARING", "").lower() == "true" or
+    os.path.exists("/mount/src") or
+    os.getenv("HOSTNAME", "").startswith("streamlit")
+)
 ALLOW_LLM_LOCAL = os.getenv("ALLOW_LLM_LOCAL", "0") == "1"
 ENABLE_LLM_PLANNING = bool(ANTHROPIC_API_KEY) and (RUNNING_IN_CLOUD or ALLOW_LLM_LOCAL)
 
