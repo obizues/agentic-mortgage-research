@@ -8,6 +8,7 @@ from database import DebateDatabase
 import sys
 import platform
 import os
+import time
 
 # --- Fintech Style Header & Personal Branding ---
 st.set_page_config(
@@ -261,8 +262,15 @@ if "agent" not in st.session_state:
     st.session_state.role_logs = []
     # Initialize debate database
     st.session_state.debate_db = DebateDatabase()
+    st.session_state.llm_calls = 0
+    st.session_state.last_llm_call_at = 0.0
 else:
     st.session_state.first_run = False
+
+if "llm_calls" not in st.session_state:
+    st.session_state.llm_calls = 0
+if "last_llm_call_at" not in st.session_state:
+    st.session_state.last_llm_call_at = 0.0
 
 agent = st.session_state.agent
 debate_db = st.session_state.debate_db
@@ -278,7 +286,37 @@ def markdown_to_html(text):
     return text
 
 # Helper function to run actions with UI feedback
-def run_action_ui(action_name, force=False, use_spinner=True):
+def can_run_llm_action(action_label, requires_llm=False):
+    if not config.ENABLE_LLM_PLANNING:
+        if requires_llm:
+            st.warning("LLM is disabled for this session.")
+            return False
+        return True
+
+    max_calls = config.LLM_MAX_CALLS_PER_SESSION
+    cooldown = config.LLM_COOLDOWN_SECONDS
+    now = time.time()
+
+    if st.session_state.llm_calls >= max_calls:
+        st.warning(
+            f"LLM usage limit reached for this session ({max_calls} actions). "
+            "Please refresh later or use cached results."
+        )
+        return False
+
+    wait_time = cooldown - (now - st.session_state.last_llm_call_at)
+    if wait_time > 0:
+        st.info(f"Please wait {int(wait_time)}s before running another LLM action.")
+        return False
+
+    st.session_state.last_llm_call_at = now
+    st.session_state.llm_calls += 1
+    return True
+
+
+def run_action_ui(action_name, force=False, use_spinner=True, requires_llm=False):
+    if not can_run_llm_action(action_name, requires_llm=requires_llm):
+        return
     try:
         if use_spinner:
             with st.spinner(f"Running {action_name}..."):
@@ -295,29 +333,30 @@ with st.sidebar.expander("Agent Controls", expanded=False):
 
     # Main actions
     if st.button("🤖 Agentic Plan", help="Fetch data, analyze, and generate Round 1 positions"):
-        run_action_ui("agentic_plan", force=force_refresh)
+        run_action_ui("agentic_plan", force=force_refresh, requires_llm=False)
     
     if st.button("📝 Regenerate Summary", help="Generate fresh executive summary"):
-        run_action_ui("summarize_insights", force=True)
+        run_action_ui("summarize_insights", force=True, requires_llm=False)
     
     st.divider()
     st.caption("**Debate Controls**")
     
     if st.button("🔄 Regenerate Round 1", help="Refresh initial agent positions"):
         with st.spinner("Regenerating Round 1 positions..."):
-            if agent.llm_client:
+            if not agent.llm_client:
+                st.error("LLM client required")
+            elif can_run_llm_action("regenerate_round_1", requires_llm=True):
                 agent._debate_round_1_initial_positions()
                 st.success("✅ Round 1 positions regenerated!")
                 st.rerun()
-            else:
-                st.error("LLM client required")
     
     if st.button("🔥 Run Full Debate", help="Run all 3 rounds from scratch"):
         with st.spinner("Running full 3-round debate..."):
-            result = agent.run_agent_debate(force=True)
-            agent.save_debate_to_database(debate_db)
-            st.success(result)
-            st.rerun()
+            if can_run_llm_action("run_full_debate", requires_llm=True):
+                result = agent.run_agent_debate(force=True)
+                agent.save_debate_to_database(debate_db)
+                st.success(result)
+                st.rerun()
     
     st.divider()
     if st.button("Clear Logs"):
@@ -329,6 +368,8 @@ with st.sidebar.expander("Agent Controls", expanded=False):
 if st.session_state.first_run:
     with st.status("🤖 Multi-Agent System Initializing...", expanded=True) as status:
         try:
+            if config.ENABLE_LLM_PLANNING and not can_run_llm_action("auto_agentic_plan", requires_llm=False):
+                agent.llm_client = None
             # Reset role logs for this run
             st.session_state.role_logs = []
             
@@ -349,6 +390,13 @@ if st.session_state.first_run:
             st.session_state.status_placeholder = None
             status.update(label="❌ Analysis Failed", state="error", expanded=True)
             st.error(f"Error running agentic plan: {e}")
+        finally:
+            if config.ENABLE_LLM_PLANNING and agent.llm_client is None:
+                try:
+                    from anthropic import Anthropic
+                    agent.llm_client = Anthropic(api_key=config.ANTHROPIC_API_KEY)
+                except Exception:
+                    agent.llm_client = None
     st.session_state.first_run = False
 
 
@@ -421,11 +469,12 @@ if round_1_positions:
             else:
                 # Show spinner and run debate
                 with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                    result = agent.continue_debate(force=True)
-                    # Save to database
-                    agent.save_debate_to_database(debate_db)
-                    st.session_state.debate_running = False
-                    st.rerun()
+                    if can_run_llm_action("continue_debate", requires_llm=True):
+                        result = agent.continue_debate(force=True)
+                        # Save to database
+                        agent.save_debate_to_database(debate_db)
+                        st.session_state.debate_running = False
+                        st.rerun()
         st.divider()
     
     # Three-column debate layout with round selection (shown for both complete and incomplete debates)
@@ -755,6 +804,11 @@ with st.sidebar.expander("🧪 Diagnostics", expanded=False):
         st.text(f"platform: {platform.platform()}")
         st.text(f"cwd: {os.getcwd()}")
         st.text(f"llm_enabled: {bool(config.ENABLE_LLM_PLANNING)}")
+        st.text(f"running_in_cloud: {bool(getattr(config, 'RUNNING_IN_CLOUD', False))}")
+        st.text(f"allow_llm_local: {bool(getattr(config, 'ALLOW_LLM_LOCAL', False))}")
+        st.text(f"llm_calls_this_session: {st.session_state.llm_calls}")
+        st.text(f"llm_max_calls: {config.LLM_MAX_CALLS_PER_SESSION}")
+        st.text(f"llm_cooldown_seconds: {config.LLM_COOLDOWN_SECONDS}")
         st.text(f"anthropic_key_set: {bool(getattr(config, 'ANTHROPIC_API_KEY', None))}")
         st.text(f"fred_key_set: {bool(getattr(config, 'FRED_API_KEY', None))}")
 
