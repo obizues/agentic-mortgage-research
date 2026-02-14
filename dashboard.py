@@ -293,8 +293,8 @@ def can_run_llm_action(action_label, requires_llm=False):
             return False
         return True
 
-    max_calls = config.LLM_MAX_CALLS_PER_SESSION
-    cooldown = config.LLM_COOLDOWN_SECONDS
+    max_calls = getattr(config, 'LLM_MAX_CALLS_PER_SESSION', 8)
+    cooldown = getattr(config, 'LLM_COOLDOWN_SECONDS', 45)
     now = time.time()
 
     if st.session_state.llm_calls >= max_calls:
@@ -807,8 +807,8 @@ with st.sidebar.expander("🧪 Diagnostics", expanded=False):
         st.text(f"running_in_cloud: {bool(getattr(config, 'RUNNING_IN_CLOUD', False))}")
         st.text(f"allow_llm_local: {bool(getattr(config, 'ALLOW_LLM_LOCAL', False))}")
         st.text(f"llm_calls_this_session: {st.session_state.llm_calls}")
-        st.text(f"llm_max_calls: {config.LLM_MAX_CALLS_PER_SESSION}")
-        st.text(f"llm_cooldown_seconds: {config.LLM_COOLDOWN_SECONDS}")
+        st.text(f"llm_max_calls: {getattr(config, 'LLM_MAX_CALLS_PER_SESSION', 8)}")
+        st.text(f"llm_cooldown_seconds: {getattr(config, 'LLM_COOLDOWN_SECONDS', 45)}")
         st.text(f"anthropic_key_set: {bool(getattr(config, 'ANTHROPIC_API_KEY', None))}")
         st.text(f"fred_key_set: {bool(getattr(config, 'FRED_API_KEY', None))}")
 
