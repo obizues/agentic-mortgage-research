@@ -5,6 +5,9 @@ import altair as alt
 import AgenticMortgageResearchAgent
 import config
 from database import DebateDatabase
+import sys
+import platform
+import os
 
 # --- Fintech Style Header & Personal Branding ---
 st.set_page_config(
@@ -206,7 +209,7 @@ with st.sidebar.expander("System Design Notes", expanded=False):
         - **Multi-Round Debate System**: Agents engage in 3-round debates (Initial → Cross-Examination → Consensus) with automatic Round 1 on plan execution. Button appears to continue to Rounds 2 & 3.
         - **Unified 3-Column Interface**: All debate rounds displayed side-by-side with agent-specific color themes (📊 Planner=Blue, 📉 Market Analyst=Green, 🛡️ Risk Officer=Red) for easy comparison throughout all stages.
         - **Round Selection**: Button-based navigation (Round 1/2/3) allows switching between debate stages while maintaining consistent 3-column agent layout.
-        - **Multi-Agent Architecture**: Three specialized roles (Planner, Market Analyst, Risk Officer) provide diverse analytical perspectives with confidence levels.
+        - **Multi-Agent Architecture**: Three specialized roles (Planner, Market Analyst, Risk Officer) provide diverse analytical perspectives. Each agent's confidence level reflects certainty in their own analysis, not agreement—agents can have high confidence while reaching different conclusions.
         - **Historical Learning**: SQLite database stores all debates with outcome validation against actual market movements for accuracy tracking.
         - **Progressive Disclosure**: Round 1 positions display immediately after Agentic Plan. "Continue" button triggers Rounds 2 & 3 on demand for full debate with consensus.
         - **Orchestration**: LLM selects actions from current knowledge state and auto-generates Round 1 positions. Continue button generates Rounds 2 & 3 seamlessly within same view.
@@ -427,6 +430,14 @@ if round_1_positions:
     
     # Three-column debate layout with round selection (shown for both complete and incomplete debates)
     st.markdown("### 📋 Complete Debate Transcript")
+    
+    # Info box explaining confidence vs. position
+    st.info(
+        "💡 **Understanding Confidence Levels:** Each agent's confidence represents how certain they are about **their own analysis**, "
+        "not agreement with other agents. Agents can have the same confidence level (e.g., 80%) while reaching completely different "
+        "conclusions (Bullish/Neutral/Bearish) because they analyze from specialized perspectives: Planner focuses on opportunities, "
+        "Market Analyst on economic conditions, and Risk Officer on potential downsides."
+    )
     
     # Round selector buttons
     col_btn1, col_btn2, col_btn3 = st.columns(3)
@@ -732,4 +743,69 @@ Accuracy score increases based on how much the market moved in the predicted dir
         if val_stats['total_validated'] > 0:
             st.metric("Overall Accuracy", f"{val_stats['accuracy_rate']}%")
             st.metric("Correct Predictions", f"{val_stats['correct_count']}/{val_stats['total_validated']}")
+
+# ---------- Diagnostics (Client/Content Troubleshooting) ----------
+with st.sidebar.expander("🧪 Diagnostics", expanded=False):
+    st.caption("Use this to verify data and client rendering status.")
+
+    try:
+        st.markdown("**Environment**")
+        st.text(f"streamlit: {st.__version__}")
+        st.text(f"python: {sys.version.split()[0]}")
+        st.text(f"platform: {platform.platform()}")
+        st.text(f"cwd: {os.getcwd()}")
+        st.text(f"llm_enabled: {bool(config.ENABLE_LLM_PLANNING)}")
+        st.text(f"anthropic_key_set: {bool(getattr(config, 'ANTHROPIC_API_KEY', None))}")
+        st.text(f"fred_key_set: {bool(getattr(config, 'FRED_API_KEY', None))}")
+
+        secrets_path = os.path.join(os.getcwd(), ".streamlit", "secrets.toml")
+        st.text(f"secrets_file_exists: {os.path.exists(secrets_path)}")
+        st.text(f"secrets_path: {secrets_path}")
+
+        try:
+            st.text(f"secrets_keys: {list(st.secrets.keys())}")
+        except Exception as secrets_exc:
+            st.text(f"secrets_keys: error ({secrets_exc})")
+
+        fred_secret_present = False
+        try:
+            fred_secret_present = "FRED_API_KEY" in st.secrets
+        except Exception:
+            fred_secret_present = False
+        fred_env_present = bool(os.getenv("FRED_API_KEY"))
+        if fred_secret_present:
+            fred_source = "secrets"
+        elif fred_env_present:
+            fred_source = "env"
+        else:
+            fred_source = "missing"
+        st.text(f"fred_key_source: {fred_source}")
+
+        st.markdown("**Data Availability**")
+        rates_df = agent.knowledge.get("mortgage_rates")
+        prices_df = agent.knowledge.get("home_prices")
+        st.text(f"mortgage_rates_rows: {0 if rates_df is None else len(rates_df)}")
+        st.text(f"home_prices_rows: {0 if prices_df is None else len(prices_df)}")
+
+        st.markdown("**Debate Data**")
+        round_1 = agent.knowledge.get("debate_round_1", {})
+        round_2 = agent.knowledge.get("debate_round_2", {})
+        round_3 = agent.knowledge.get("debate_round_3", {})
+        st.text(
+            f"round_1_agents: {list(round_1.keys()) if isinstance(round_1, dict) else 'n/a'}"
+        )
+        st.text(
+            f"round_2_agents: {list(round_2.keys()) if isinstance(round_2, dict) else 'n/a'}"
+        )
+        st.text(
+            f"round_3_agents: {list(round_3.keys()) if isinstance(round_3, dict) else 'n/a'}"
+        )
+    except Exception as exc:
+        st.error("Diagnostics failed to render.")
+        st.text(str(exc))
+
+    st.info(
+        "If charts or text are missing on a client device, it is often caused by content blockers, "
+        "Private Relay/VPN, or network filters that block Streamlit/Vega scripts."
+    )
 

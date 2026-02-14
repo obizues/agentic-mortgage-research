@@ -16,9 +16,17 @@ try:
         secrets_value = None
 
     ANTHROPIC_API_KEY = secrets_value or os.getenv("ANTHROPIC_API_KEY")
+
+    try:
+        fred_secrets_value = st.secrets.get("FRED_API_KEY")
+    except StreamlitSecretNotFoundError:
+        fred_secrets_value = None
+
+    FRED_API_KEY = fred_secrets_value or os.getenv("FRED_API_KEY")
 except (ImportError, AttributeError):
     # If not in Streamlit context, just use environment variables.
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+    FRED_API_KEY = os.getenv("FRED_API_KEY")
 
 MODEL_NAME = "claude-3-haiku-20240307"
 
