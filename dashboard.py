@@ -485,7 +485,7 @@ if round_1_positions:
                 st.session_state.debate_running = False
             
             if not st.session_state.debate_running:
-                if st.button("🔥 Continue to Full Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
+                if st.button("🔥 See Rounds 2 & 3 & Summary", use_container_width=True, type="primary", key="continue_debate_btn"):
                     st.session_state.debate_running = True
                     st.rerun()
             else:
