@@ -487,7 +487,7 @@ if round_1_positions:
                 if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
                     st.session_state.debate_running = True
                     st.rerun()
-                st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Rounds 2 & 3 + Summary + Consensus</p>", unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
             else:
                 can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
                 if error_msg:
