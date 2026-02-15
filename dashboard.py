@@ -289,33 +289,32 @@ def markdown_to_html(text):
 def can_run_llm_action(action_label, requires_llm=False):
     if not config.ENABLE_LLM_PLANNING:
         if requires_llm:
-            st.warning("LLM is disabled for this session.")
-            return False
-        return True
+            return False, "LLM is disabled for this session."
+        return True, None
 
     max_calls = getattr(config, 'LLM_MAX_CALLS_PER_SESSION', 8)
     cooldown = getattr(config, 'LLM_COOLDOWN_SECONDS', 45)
     now = time.time()
 
     if st.session_state.llm_calls >= max_calls:
-        st.warning(
-            f"LLM usage limit reached for this session ({max_calls} actions). "
-            "Please refresh later or use cached results."
-        )
-        return False
+        msg = f"LLM usage limit reached for this session ({max_calls} actions). Please refresh later or use cached results."
+        return False, msg
 
     wait_time = cooldown - (now - st.session_state.last_llm_call_at)
     if wait_time > 0:
-        st.info(f"Please wait {int(wait_time)}s before running another LLM action.")
-        return False
+        msg = f"⏳ Please wait {int(wait_time)}s before running another LLM action."
+        return False, msg
 
     st.session_state.last_llm_call_at = now
     st.session_state.llm_calls += 1
-    return True
+    return True, None
 
 
 def run_action_ui(action_name, force=False, use_spinner=True, requires_llm=False):
-    if not can_run_llm_action(action_name, requires_llm=requires_llm):
+    can_run, error_msg = can_run_llm_action(action_name, requires_llm=requires_llm)
+    if not can_run:
+        if error_msg:
+            st.warning(error_msg)
         return
     try:
         if use_spinner:
@@ -345,18 +344,25 @@ with st.sidebar.expander("Agent Controls", expanded=False):
         with st.spinner("Regenerating Round 1 positions..."):
             if not agent.llm_client:
                 st.error("LLM client required")
-            elif can_run_llm_action("regenerate_round_1", requires_llm=True):
-                agent._debate_round_1_initial_positions()
-                st.success("✅ Round 1 positions regenerated!")
-                st.rerun()
+            else:
+                can_run, error_msg = can_run_llm_action("regenerate_round_1", requires_llm=True)
+                if can_run:
+                    agent._debate_round_1_initial_positions()
+                    st.success("✅ Round 1 positions regenerated!")
+                    st.rerun()
+                elif error_msg:
+                    st.warning(error_msg)
     
     if st.button("🔥 Run Full Debate", help="Run all 3 rounds from scratch"):
         with st.spinner("Running full 3-round debate..."):
-            if can_run_llm_action("run_full_debate", requires_llm=True):
+            can_run, error_msg = can_run_llm_action("run_full_debate", requires_llm=True)
+            if can_run:
                 result = agent.run_agent_debate(force=True)
                 agent.save_debate_to_database(debate_db)
                 st.success(result)
                 st.rerun()
+            elif error_msg:
+                st.warning(error_msg)
     
     st.divider()
     if st.button("Clear Logs"):
@@ -371,8 +377,10 @@ should_auto_run = st.session_state.first_run or not round_1_positions
 if should_auto_run:
     with st.status("🤖 Multi-Agent System Initializing...", expanded=True) as status:
         try:
-            if config.ENABLE_LLM_PLANNING and not can_run_llm_action("auto_agentic_plan", requires_llm=False):
-                agent.llm_client = None
+            if config.ENABLE_LLM_PLANNING:
+                can_run, error_msg = can_run_llm_action("auto_agentic_plan", requires_llm=False)
+                if not can_run:
+                    agent.llm_client = None
             # Reset role logs for this run
             st.session_state.role_logs = []
             
@@ -559,8 +567,11 @@ if round_1_positions:
                     st.session_state.debate_running = True
                     st.rerun()
             else:
-                with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                    if can_run_llm_action("continue_debate", requires_llm=True):
+                can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
+                if error_msg:
+                    st.warning(error_msg)
+                elif can_run:
+                    with st.spinner("🎯 Running cross-examination and consensus rounds..."):
                         result = agent.continue_debate(force=True)
                         agent.save_debate_to_database(debate_db)
                         st.session_state.debate_running = False
