@@ -446,9 +446,6 @@ debate_complete = "debate_results" in agent.knowledge
 
 # Show debate interface if Round 1 exists
 if round_1_positions:
-    # Display debate transcript section
-    st.markdown("### 📋 Complete Debate Transcript")
-    
     # Get debate data
     round_1 = agent.knowledge.get("debate_round_1", {})
     round_2 = agent.knowledge.get("debate_round_2", {})
@@ -468,7 +465,42 @@ if round_1_positions:
         "Risk Officer": {"color": "#e53e3e", "bg": "#fff5f5", "emoji": "🛡️"}
     }
     
-    # ===== SECTION 1: ROUND SELECTOR BUTTONS (at top) =====
+    # ===== MAIN DEBATE SECTION HEADER =====
+    st.markdown("### 🎬 Multi-Agent Debate & Analysis")
+    
+    # ===== SECTION 1: CONTINUE TO DEBATE PROMPT (at top, only on Round 1 if not complete) =====
+    if not debate_complete and round_1:
+        st.info(
+            "**Ready to watch them debate?**\n\n"
+            "You've seen their initial positions. Each agent analyzed from their specialized lens:\n\n"
+            "📊 **Planner** sees opportunities | "
+            "📉 **Market Analyst** sees trends | "
+            "🛡️ **Risk Officer** sees risks\n\n"
+            "Click below to watch them challenge each other in Rounds 2 & 3."
+        )
+        
+        col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+        with col_btn2:
+            if 'debate_running' not in st.session_state:
+                st.session_state.debate_running = False
+            
+            if not st.session_state.debate_running:
+                if st.button("🔥 Continue to Full Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
+                    st.session_state.debate_running = True
+                    st.rerun()
+            else:
+                can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
+                if error_msg:
+                    st.warning(error_msg)
+                elif can_run:
+                    with st.spinner("🎯 Running cross-examination and consensus rounds..."):
+                        result = agent.continue_debate(force=True)
+                        agent.save_debate_to_database(debate_db)
+                        st.session_state.debate_running = False
+                        st.rerun()
+        st.divider()
+    
+    # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
     col_btn1, col_btn2, col_btn3 = st.columns(3)
     with col_btn1:
         if st.button("📋 Round 1", use_container_width=True, key="round_1_btn"):
@@ -482,10 +514,7 @@ if round_1_positions:
         if st.button("🤝 Round 3", use_container_width=True, key="round_3_btn", disabled=not r3_available):
             st.session_state.selected_round = 3
     
-    if not debate_complete:
-        st.caption("ℹ️ Complete Round 1 below and click 'Continue to Full Debate' to unlock Rounds 2 & 3")
-    
-    # ===== SECTION 2: DISPLAY SELECTED ROUND CONTENT =====
+    # ===== SECTION 3: DISPLAY SELECTED ROUND CONTENT =====
     st.divider()
     round_names = {
         1: "📋 Round 1: Initial Positions",
@@ -544,38 +573,6 @@ if round_1_positions:
                     )
                 else:
                     st.info("Round 3 not yet available.")
-    
-    # ===== SECTION 3: CONTINUE TO DEBATE (only shown on Round 1 if not complete) =====
-    if st.session_state.selected_round == 1 and not debate_complete and round_1:
-        st.divider()
-        st.markdown("### 🔥 Ready to see them debate?")
-        st.info(
-            "You've seen their initial positions. Each agent analyzed from their specialized lens:\n\n"
-            "📊 **Planner** sees opportunities | "
-            "📉 **Market Analyst** sees trends | "
-            "🛡️ **Risk Officer** sees risks\n\n"
-            "Continue to watch them challenge each other in Rounds 2 & 3."
-        )
-        
-        col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-        with col_btn2:
-            if 'debate_running' not in st.session_state:
-                st.session_state.debate_running = False
-            
-            if not st.session_state.debate_running:
-                if st.button("🔥 Continue to Full Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
-                    st.session_state.debate_running = True
-                    st.rerun()
-            else:
-                can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
-                if error_msg:
-                    st.warning(error_msg)
-                elif can_run:
-                    with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                        result = agent.continue_debate(force=True)
-                        agent.save_debate_to_database(debate_db)
-                        st.session_state.debate_running = False
-                        st.rerun()
     
     # ===== SECTION 4: FINAL RECOMMENDATION (appears at bottom if debate complete) =====
     if debate_complete:
