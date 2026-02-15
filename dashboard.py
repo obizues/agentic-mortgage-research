@@ -476,7 +476,7 @@ if round_1_positions:
             "📊 **Planner AI** sees opportunities & strategy | "
             "📉 **Market Analyst AI** sees trends & patterns | "
             "🛡️ **Risk Officer AI** sees risks & concerns\n\n"
-            "Ready to watch them challenge each other's reasoning in Rounds 2 & 3?"
+            "Run the full debate to see Rounds 2 & 3 cross-examination and get an executive summary of the final consensus."
         )
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
@@ -498,7 +498,6 @@ if round_1_positions:
                         agent.save_debate_to_database(debate_db)
                         st.session_state.debate_running = False
                         st.rerun()
-        st.divider()
     
     # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
     col_btn1, col_btn2, col_btn3 = st.columns(3)
@@ -515,7 +514,6 @@ if round_1_positions:
             st.session_state.selected_round = 3
     
     # ===== SECTION 3: DISPLAY SELECTED ROUND CONTENT =====
-    st.divider()
     round_names = {
         1: "📋 Round 1: Initial Positions",
         2: "🔍 Round 2: Cross-Examination", 
