@@ -160,8 +160,8 @@ st.sidebar.info("App version: v1.3.0 - Multi-Round Debate & Learning")
 st.sidebar.markdown(
     """
     <div style='text-align: center; margin: 4px 0 8px 0; padding: 8px; background: #f0f8ff; border-radius: 6px;'>
-        <div style='margin: 4px;'><span class='status-indicator status-online'></span><strong>Multi-Agent System</strong></div>
-        <div style='font-size: 0.85rem; margin: 2px;'>📊 3 Specialized Perspectives</div>
+        <div style='margin: 4px;'><span class='status-indicator status-online'></span><strong>3-Agent Debate System</strong></div>
+        <div style='font-size: 0.85rem; margin: 2px;'>📊 Planner | 📉 Market Analyst | 🛡️ Risk Officer</div>
         <div style='font-size: 0.85rem; margin: 2px;'>🤖 Claude 3.5 Powered</div>
         <div style='font-size: 0.85rem; margin: 2px;'>⚡ Live Execution Tracking</div>
     </div>
@@ -281,7 +281,7 @@ if "agent" not in st.session_state:
         # Update status placeholder if it exists
         if "status_placeholder" in st.session_state and st.session_state.status_placeholder is not None:
             # Collect role-specific logs (with emojis)
-            if any(keyword in msg for keyword in ["📊", "📈", "🔍", "⚖️", "💡", "🧠", "🛡️", "📉"]):
+            if any(keyword in msg for keyword in ["📊", "�", "🛡️", "📉"]):
                 if "role_logs" not in st.session_state:
                     st.session_state.role_logs = []
                 st.session_state.role_logs.append(msg)
