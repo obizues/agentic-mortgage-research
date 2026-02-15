@@ -438,21 +438,6 @@ debate_complete = "debate_results" in agent.knowledge
 
 # Show debate interface if Round 1 exists
 if round_1_positions:
-    # Show final recommendation banner if debate is complete
-    if debate_complete:
-        debate_results = agent.knowledge["debate_results"]
-        st.markdown(
-            f"""<div style='padding: 20px; background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%); 
-            color: white; border-radius: 8px; text-align: center; margin-bottom: 16px;'>
-            <h2 style='margin: 0;'>Final Recommendation: {debate_results['final_recommendation']}</h2>
-            <p style='margin-top: 8px; font-size: 1.1rem;'>
-            Vote Breakdown: {debate_results['vote_breakdown']} | 
-            Avg Confidence: {debate_results['avg_confidence']:.0f}%
-            </p>
-            </div>""",
-            unsafe_allow_html=True
-        )
-    
     # Display debate transcript section
     st.markdown("### 📋 Complete Debate Transcript")
     
@@ -475,38 +460,93 @@ if round_1_positions:
         "Risk Officer": {"color": "#e53e3e", "bg": "#fff5f5", "emoji": "🛡️"}
     }
     
-    # ===== SECTION 1: ALWAYS SHOW ROUND 1 =====
-    st.markdown("#### Round 1: Initial Positions")
+    # ===== SECTION 1: ROUND SELECTOR BUTTONS (at top) =====
+    col_btn1, col_btn2, col_btn3 = st.columns(3)
+    with col_btn1:
+        if st.button("📋 Round 1", use_container_width=True, key="round_1_btn"):
+            st.session_state.selected_round = 1
+    with col_btn2:
+        r2_available = bool(round_2)
+        if st.button("🔍 Round 2", use_container_width=True, key="round_2_btn", disabled=not r2_available):
+            st.session_state.selected_round = 2
+    with col_btn3:
+        r3_available = bool(round_3)
+        if st.button("🤝 Round 3", use_container_width=True, key="round_3_btn", disabled=not r3_available):
+            st.session_state.selected_round = 3
+    
+    if not debate_complete:
+        st.caption("ℹ️ Complete Round 1 below and click 'Continue to Full Debate' to unlock Rounds 2 & 3")
+    
+    # ===== SECTION 2: DISPLAY SELECTED ROUND CONTENT =====
+    st.divider()
+    round_names = {
+        1: "📋 Round 1: Initial Positions",
+        2: "🔍 Round 2: Cross-Examination", 
+        3: "🤝 Round 3: Final Votes"
+    }
+    st.markdown(f"#### {round_names[st.session_state.selected_round]}")
+    
     col1, col2, col3 = st.columns(3)
     
     for col, agent_name in zip([col1, col2, col3], agent_names):
         with col:
             r1_data = round_1.get(agent_name, {})
+            r2_data = round_2.get(agent_name, {})
+            r3_data = round_3.get(agent_name, {})
             style = agent_styles[agent_name]
             
             # Agent header
             st.markdown(f"##### {style['emoji']} {agent_name}")
             
-            st.markdown("**Initial Position**")
-            st.caption(f"Confidence: {r1_data.get('confidence', 'N/A')}%")
-            st.markdown(
-                f"""<div style='padding: 12px; background: {style['bg']}; border-left: 4px solid {style['color']}; border-radius: 4px; min-height: 180px; font-size: 0.9rem;'>
-                {markdown_to_html(r1_data.get('position', 'N/A'))}
-                </div>""",
-                unsafe_allow_html=True
-            )
+            if st.session_state.selected_round == 1:
+                st.markdown("**Initial Position**")
+                st.caption(f"Confidence: {r1_data.get('confidence', 'N/A')}%")
+                st.markdown(
+                    f"""<div style='padding: 12px; background: {style['bg']}; border-left: 4px solid {style['color']}; border-radius: 4px; min-height: 180px; font-size: 0.9rem;'>
+                    {markdown_to_html(r1_data.get('position', 'N/A'))}
+                    </div>""",
+                    unsafe_allow_html=True
+                )
+                
+            elif st.session_state.selected_round == 2:
+                st.markdown("**Cross-Examination**")
+                if r2_data.get('cross_examination'):
+                    st.markdown(
+                        f"""<div style='padding: 12px; background: {style['bg']}; border-left: 4px solid {style['color']}; border-radius: 4px; min-height: 180px; font-size: 0.9rem;'>
+                        {markdown_to_html(r2_data.get('cross_examination', 'N/A'))}
+                        </div>""",
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.info("Round 2 not yet available.")
+                    
+            elif st.session_state.selected_round == 3:
+                st.markdown("**Final Vote**")
+                if r3_data.get('stance'):
+                    stance = r3_data.get('stance', 'N/A')
+                    confidence = r3_data.get('confidence', 0)
+                    stance_color = {"BULLISH": "🟢", "BEARISH": "🔴", "NEUTRAL": "🟡"}
+                    st.markdown(f"**Vote:** {stance_color.get(stance, '⚪')} **{stance}**")
+                    st.caption(f"Confidence: {confidence:.0f}%")
+                    st.markdown(
+                        f"""<div style='padding: 12px; background: {style['bg']}; border-left: 4px solid {style['color']}; border-radius: 4px; min-height: 180px; font-size: 0.9rem;'>
+                        {markdown_to_html(r3_data.get('reasoning', 'N/A'))}
+                        </div>""",
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.info("Round 3 not yet available.")
     
-    # ===== SECTION 2: CONTINUE TO DEBATE PROMPT =====
-    if not debate_complete and round_1:
+    # ===== SECTION 3: CONTINUE TO DEBATE (only shown on Round 1 if not complete) =====
+    if st.session_state.selected_round == 1 and not debate_complete and round_1:
         st.divider()
         st.markdown("### 🔥 Ready to see them debate?")
         st.info(
-            "**Next Steps**\n\n"
-            "You've seen their initial positions above. Each agent analyzed the market from their specialized lens:\n\n"
+            "You've seen their initial positions. Each agent analyzed from their specialized lens:\n\n"
             "📊 **Planner** sees opportunities | "
             "📉 **Market Analyst** sees trends | "
             "🛡️ **Risk Officer** sees risks\n\n"
-            "Continue to watch them challenge each other's reasoning in Rounds 2 & 3 and build toward consensus."
+            "Continue to watch them challenge each other in Rounds 2 & 3."
         )
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
@@ -515,7 +555,7 @@ if round_1_positions:
                 st.session_state.debate_running = False
             
             if not st.session_state.debate_running:
-                if st.button("🔥 Continue to Full Debate (Rounds 2 & 3)", use_container_width=True, type="primary", key="continue_debate_btn"):
+                if st.button("🔥 Continue to Full Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
                     st.session_state.debate_running = True
                     st.rerun()
             else:
@@ -526,73 +566,21 @@ if round_1_positions:
                         st.session_state.debate_running = False
                         st.rerun()
     
-    # ===== SECTION 3: ROUND SELECTOR BUTTONS =====
-    st.divider()
-    st.markdown("#### View Other Rounds")
-    st.caption("✅ Complete the debate above to unlock Rounds 2 & 3")
-    
-    col_btn1, col_btn2, col_btn3 = st.columns(3)
-    with col_btn1:
-        if st.button("📋 Round 1: Initial Positions", use_container_width=True, key="round_1_btn"):
-            st.session_state.selected_round = 1
-    with col_btn2:
-        r2_available = bool(round_2)
-        if st.button("🔍 Round 2: Cross-Examination", use_container_width=True, key="round_2_btn", disabled=not r2_available):
-            st.session_state.selected_round = 2
-    with col_btn3:
-        r3_available = bool(round_3)
-        if st.button("🤝 Round 3: Final Votes", use_container_width=True, key="round_3_btn", disabled=not r3_available):
-            st.session_state.selected_round = 3
-    
-    # ===== SECTION 4: SHOW SELECTED ROUND (IF NOT ROUND 1) =====
-    if st.session_state.selected_round != 1:
+    # ===== SECTION 4: FINAL RECOMMENDATION (appears at bottom if debate complete) =====
+    if debate_complete:
         st.divider()
-        round_names = {
-            2: "🔍 Round 2: Cross-Examination", 
-            3: "🤝 Round 3: Final Votes"
-        }
-        st.markdown(f"#### {round_names[st.session_state.selected_round]}")
-        
-        # Display content for selected round 2 or 3
-        col1, col2, col3 = st.columns(3)
-        
-        for col, agent_name in zip([col1, col2, col3], agent_names):
-            with col:
-                r2_data = round_2.get(agent_name, {})
-                r3_data = round_3.get(agent_name, {})
-                style = agent_styles[agent_name]
-                
-                # Agent header
-                st.markdown(f"##### {style['emoji']} {agent_name}")
-                
-                if st.session_state.selected_round == 2:
-                    st.markdown("**Cross-Examination**")
-                    if r2_data.get('cross_examination'):
-                        st.markdown(
-                            f"""<div style='padding: 12px; background: {style['bg']}; border-left: 4px solid {style['color']}; border-radius: 4px; min-height: 180px; font-size: 0.9rem;'>
-                            {markdown_to_html(r2_data.get('cross_examination', 'N/A'))}
-                            </div>""",
-                            unsafe_allow_html=True
-                        )
-                    else:
-                        st.info("Round 2 not yet available. Click 'Continue to Full Debate' above.")
-                        
-                elif st.session_state.selected_round == 3:
-                    st.markdown("**Final Vote**")
-                    if r3_data.get('stance'):
-                        stance = r3_data.get('stance', 'N/A')
-                        confidence = r3_data.get('confidence', 0)
-                        stance_color = {"BULLISH": "🟢", "BEARISH": "🔴", "NEUTRAL": "🟡"}
-                        st.markdown(f"**Vote:** {stance_color.get(stance, '⚪')} **{stance}**")
-                        st.caption(f"Confidence: {confidence:.0f}%")
-                        st.markdown(
-                            f"""<div style='padding: 12px; background: {style['bg']}; border-left: 4px solid {style['color']}; border-radius: 4px; min-height: 180px; font-size: 0.9rem;'>
-                            {markdown_to_html(r3_data.get('reasoning', 'N/A'))}
-                            </div>""",
-                            unsafe_allow_html=True
-                        )
-                    else:
-                        st.info("Round 3 not yet available. Click 'Continue to Full Debate' above.")
+        debate_results = agent.knowledge["debate_results"]
+        st.markdown(
+            f"""<div style='padding: 20px; background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%); 
+            color: white; border-radius: 8px; text-align: center;'>
+            <h2 style='margin: 0;'>✅ Final Recommendation: {debate_results['final_recommendation']}</h2>
+            <p style='margin-top: 8px; font-size: 1.1rem;'>
+            Vote Breakdown: {debate_results['vote_breakdown']} | 
+            Avg Confidence: {debate_results['avg_confidence']:.0f}%
+            </p>
+            </div>""",
+            unsafe_allow_html=True
+        )
 
 elif not round_1_positions:
     st.info("Run Agentic Plan to generate initial agent positions and start the debate.")
