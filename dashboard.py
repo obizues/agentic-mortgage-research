@@ -506,11 +506,13 @@ if round_1_positions:
             st.session_state.selected_round = 1
     with col_btn2:
         r2_available = bool(round_2)
-        if st.button("🔍 Round 2", use_container_width=True, key="round_2_btn", disabled=not r2_available):
+        r2_help = None if r2_available else "Click 'Start Debate' above to unlock this round"
+        if st.button("🔍 Round 2", use_container_width=True, key="round_2_btn", disabled=not r2_available, help=r2_help):
             st.session_state.selected_round = 2
     with col_btn3:
         r3_available = bool(round_3)
-        if st.button("🤝 Round 3", use_container_width=True, key="round_3_btn", disabled=not r3_available):
+        r3_help = None if r3_available else "Click 'Start Debate' above to unlock this round"
+        if st.button("🤝 Round 3", use_container_width=True, key="round_3_btn", disabled=not r3_available, help=r3_help):
             st.session_state.selected_round = 3
     
     # ===== SECTION 3: DISPLAY SELECTED ROUND CONTENT =====
