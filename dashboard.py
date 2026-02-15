@@ -97,7 +97,7 @@ st.markdown(
         .status-offline { background: #ff6b6b; }
     </style>
     <div class="fintech-header">
-        🏦 Agentic Mortgage Research Dashboard
+        🏦 Multi-Agent Mortgage Analysis System
     </div>
     """,
     unsafe_allow_html=True
@@ -471,12 +471,12 @@ if round_1_positions:
     # ===== SECTION 1: CONTINUE TO DEBATE PROMPT (at top, only on Round 1 if not complete) =====
     if not debate_complete and round_1:
         st.info(
-            "**Ready to watch them debate?**\n\n"
-            "You've seen their initial positions. Each agent analyzed from their specialized lens:\n\n"
-            "📊 **Planner** sees opportunities | "
-            "📉 **Market Analyst** sees trends | "
-            "🛡️ **Risk Officer** sees risks\n\n"
-            "Click below to watch them challenge each other in Rounds 2 & 3."
+            "**Three Unique AI Agents Ready to Debate**\n\n"
+            "Each AI brings its own specialized perspective (see their initial positions below):\n\n"
+            "📊 **Planner AI** sees opportunities & strategy | "
+            "📉 **Market Analyst AI** sees trends & patterns | "
+            "🛡️ **Risk Officer AI** sees risks & concerns\n\n"
+            "Ready to watch them challenge each other's reasoning in Rounds 2 & 3?"
         )
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
