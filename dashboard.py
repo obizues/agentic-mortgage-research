@@ -40,37 +40,41 @@ st.markdown(
         section[data-testid="stSidebar"] > div:first-child {
             padding-top: 1rem;
         }
-        /* Make sidebar toggle button more visible */
-        button[kind="header"] {
-            background: rgba(10, 116, 218, 0.1) !important;
-            border: 2px solid #0a74da !important;
-            border-radius: 4px !important;
-            padding: 8px !important;
+        /* Make sidebar toggle button more visible - target the actual hamburger icon */
+        header[data-testid="stHeader"] button[kind="header"]:first-child {
+            background: linear-gradient(135deg, #0a74da 0%, #00c48c 100%) !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            box-shadow: 0 2px 12px rgba(10, 116, 218, 0.5) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
         }
-        button[kind="header"]:hover {
-            background: rgba(10, 116, 218, 0.2) !important;
-            box-shadow: 0 0 8px rgba(10, 116, 218, 0.4) !important;
+        header[data-testid="stHeader"] button[kind="header"]:first-child:hover {
+            box-shadow: 0 4px 16px rgba(10, 116, 218, 0.7) !important;
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #0a74da 20%, #00c48c 120%) !important;
         }
         /* Collapsed sidebar control button (when sidebar is hidden) */
         button[data-testid="collapsedControl"] {
             background: linear-gradient(135deg, #0a74da 0%, #00c48c 100%) !important;
             border-radius: 8px !important;
-            padding: 12px !important;
-            box-shadow: 0 2px 12px rgba(10, 116, 218, 0.4) !important;
+            padding: 14px !important;
+            box-shadow: 0 3px 15px rgba(10, 116, 218, 0.6) !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
         }
         button[data-testid="collapsedControl"]:hover {
-            box-shadow: 0 4px 16px rgba(10, 116, 218, 0.6) !important;
-            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(10, 116, 218, 0.8) !important;
+            transform: scale(1.15);
         }
         /* Mobile-specific enhancements */
         @media (max-width: 768px) {
-            button[kind="header"] {
-                padding: 12px !important;
+            header[data-testid="stHeader"] button[kind="header"]:first-child {
+                padding: 14px !important;
+                box-shadow: 0 4px 16px rgba(10, 116, 218, 0.7) !important;
                 border-width: 3px !important;
             }
             button[data-testid="collapsedControl"] {
-                padding: 16px !important;
-                box-shadow: 0 4px 16px rgba(10, 116, 218, 0.6) !important;
+                padding: 18px !important;
+                box-shadow: 0 5px 20px rgba(10, 116, 218, 0.8) !important;
             }
         }
         .stButton > button {
@@ -281,7 +285,7 @@ if "agent" not in st.session_state:
         # Update status placeholder if it exists
         if "status_placeholder" in st.session_state and st.session_state.status_placeholder is not None:
             # Collect role-specific logs (with emojis)
-            if any(keyword in msg for keyword in ["📊", "�", "🛡️", "📉"]):
+            if any(keyword in msg for keyword in ["📊", "⚙️", "🛡️", "📉"]):
                 if "role_logs" not in st.session_state:
                     st.session_state.role_logs = []
                 st.session_state.role_logs.append(msg)
