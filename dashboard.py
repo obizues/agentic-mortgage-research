@@ -364,8 +364,11 @@ with st.sidebar.expander("Agent Controls", expanded=False):
         agent.logs.clear()
         st.session_state.logs_text = []
 
-# Run agentic plan on first load
-if st.session_state.first_run:
+# Run agentic plan on first load or if no debate data exists
+round_1_positions = agent.knowledge.get("debate_round_1", {})
+should_auto_run = st.session_state.first_run or not round_1_positions
+
+if should_auto_run:
     with st.status("🤖 Multi-Agent System Initializing...", expanded=True) as status:
         try:
             if config.ENABLE_LLM_PLANNING and not can_run_llm_action("auto_agentic_plan", requires_llm=False):
