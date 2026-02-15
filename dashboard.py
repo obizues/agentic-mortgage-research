@@ -453,55 +453,26 @@ if round_1_positions:
             unsafe_allow_html=True
         )
     
-    # If debate not complete, show "Continue" button
-    if not debate_complete:
-        # Initialize debate running state
-        if 'debate_running' not in st.session_state:
-            st.session_state.debate_running = False
-        
-        st.markdown("### 🔥 Ready to see the agents debate?")
-        st.info(
-            "**Multi-Agent Debate System**\n\n"
-            "Three specialized agents have each analyzed the market and staked independent positions:\n\n"
-            "📊 **Planner** - Focuses on actionable opportunities and strategic decisions\n"
-            "📉 **Market Analyst** - Focuses on economic data, rates trends, and market conditions\n"
-            "🛡️ **Risk Officer** - Focuses on risks, vulnerabilities, and protective measures\n\n"
-            "Each agent's **confidence level is independent** of what others conclude. They can each be 80% confident in their own analysis "
-            "while reaching completely different conclusions (Bullish/Neutral/Bearish). This diversity of perspective is the strength of the system.\n\n"
-            "Continue to watch them challenge each other's reasoning and build toward consensus."
-        )
-        
-        col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-        with col_btn2:
-            # Only show button if not currently running
-            if not st.session_state.debate_running:
-                if st.button("🔥 Continue to Full Debate (Rounds 2 & 3)", use_container_width=True, type="primary", key="continue_debate_btn"):
-                    st.session_state.debate_running = True
-                    st.rerun()
-            else:
-                # Show spinner and run debate
-                with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                    if can_run_llm_action("continue_debate", requires_llm=True):
-                        result = agent.continue_debate(force=True)
-                        # Save to database
-                        agent.save_debate_to_database(debate_db)
-                        st.session_state.debate_running = False
-                        st.rerun()
-        st.divider()
-    
-    # Three-column debate layout with round selection (shown for both complete and incomplete debates)
+    # Display Round 1 positions first
     st.markdown("### 📋 Complete Debate Transcript")
     
-    # Round selector buttons
+    # Get debate data
+    round_1 = agent.knowledge.get("debate_round_1", {})
+    round_2 = agent.knowledge.get("debate_round_2", {})
+    round_3 = agent.knowledge.get("debate_round_3", {})
+    
+    # Round selector buttons with disabled state for unavailable rounds
     col_btn1, col_btn2, col_btn3 = st.columns(3)
     with col_btn1:
         if st.button("📋 Round 1: Initial Positions", use_container_width=True, key="round_1_btn"):
             st.session_state.selected_round = 1
     with col_btn2:
-        if st.button("🔍 Round 2: Cross-Examination", use_container_width=True, key="round_2_btn"):
+        r2_available = bool(round_2)
+        if st.button("🔍 Round 2: Cross-Examination", use_container_width=True, key="round_2_btn", disabled=not r2_available):
             st.session_state.selected_round = 2
     with col_btn3:
-        if st.button("🤝 Round 3: Final Votes", use_container_width=True, key="round_3_btn"):
+        r3_available = bool(round_3)
+        if st.button("🤝 Round 3: Final Votes", use_container_width=True, key="round_3_btn", disabled=not r3_available):
             st.session_state.selected_round = 3
     
     # Initialize default round
@@ -515,11 +486,6 @@ if round_1_positions:
         3: "🤝 Round 3: Final Votes"
     }
     st.caption(f"**Viewing:** {round_names[st.session_state.selected_round]}")
-    
-    # Get debate data
-    round_1 = agent.knowledge.get("debate_round_1", {})
-    round_2 = agent.knowledge.get("debate_round_2", {})
-    round_3 = agent.knowledge.get("debate_round_3", {})
     
     # Get agent names in order
     agent_names = ["Planner", "Market Analyst", "Risk Officer"]
@@ -583,7 +549,37 @@ if round_1_positions:
                         unsafe_allow_html=True
                     )
                 else:
-                    st.info("Round 3 not yet available. Click 'Continue to Full Debate' above.")
+                    st.info("Round 3 not yet available. Click 'Continue to Full Debate' below.")
+    
+    # Show continue prompt if debate not complete
+    if not debate_complete and round_1:
+        st.divider()
+        st.markdown("### 🔥 Ready to see them debate?")
+        st.info(
+            "**Next Steps**\n\n"
+            "You've seen their initial positions above. Each agent analyzed the market from their specialized lens:\n\n"
+            "📊 **Planner** sees opportunities | "
+            "📉 **Market Analyst** sees trends | "
+            "🛡️ **Risk Officer** sees risks\n\n"
+            "Continue to watch them challenge each other's reasoning in Rounds 2 & 3 and build toward consensus."
+        )
+        
+        col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+        with col_btn2:
+            if 'debate_running' not in st.session_state:
+                st.session_state.debate_running = False
+            
+            if not st.session_state.debate_running:
+                if st.button("🔥 Continue to Full Debate (Rounds 2 & 3)", use_container_width=True, type="primary", key="continue_debate_btn"):
+                    st.session_state.debate_running = True
+                    st.rerun()
+            else:
+                with st.spinner("🎯 Running cross-examination and consensus rounds..."):
+                    if can_run_llm_action("continue_debate", requires_llm=True):
+                        result = agent.continue_debate(force=True)
+                        agent.save_debate_to_database(debate_db)
+                        st.session_state.debate_running = False
+                        st.rerun()
 
 elif not round_1_positions:
     st.info("Run Agentic Plan to generate initial agent positions and start the debate.")
