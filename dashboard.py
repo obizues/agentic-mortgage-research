@@ -40,20 +40,7 @@ st.markdown(
         section[data-testid="stSidebar"] > div:first-child {
             padding-top: 1rem;
         }
-        /* Make sidebar toggle button more visible - target the actual hamburger icon */
-        header[data-testid="stHeader"] button[kind="header"]:first-child {
-            background: linear-gradient(135deg, #0a74da 0%, #00c48c 100%) !important;
-            border-radius: 8px !important;
-            padding: 10px !important;
-            box-shadow: 0 2px 12px rgba(10, 116, 218, 0.5) !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-        }
-        header[data-testid="stHeader"] button[kind="header"]:first-child:hover {
-            box-shadow: 0 4px 16px rgba(10, 116, 218, 0.7) !important;
-            transform: scale(1.1);
-            background: linear-gradient(135deg, #0a74da 20%, #00c48c 120%) !important;
-        }
-        /* Collapsed sidebar control button (when sidebar is hidden) */
+        /* Collapsed sidebar control button (when sidebar is hidden) - this is the main toggle on mobile */
         button[data-testid="collapsedControl"] {
             background: linear-gradient(135deg, #0a74da 0%, #00c48c 100%) !important;
             border-radius: 8px !important;
@@ -67,14 +54,10 @@ st.markdown(
         }
         /* Mobile-specific enhancements */
         @media (max-width: 768px) {
-            header[data-testid="stHeader"] button[kind="header"]:first-child {
-                padding: 14px !important;
-                box-shadow: 0 4px 16px rgba(10, 116, 218, 0.7) !important;
-                border-width: 3px !important;
-            }
             button[data-testid="collapsedControl"] {
                 padding: 18px !important;
                 box-shadow: 0 5px 20px rgba(10, 116, 218, 0.8) !important;
+                border-width: 3px !important;
             }
         }
         .stButton > button {
@@ -717,6 +700,16 @@ Provide:
                 st.write(agent.knowledge.get("summary", "No summary available."))
         else:
             st.write(agent.knowledge.get("summary", "No summary available."))
+
+else:
+    # Helpful message when debate data isn't loaded (e.g., after app redeploy)
+    if first_run and not st.session_state.get('plan_generated', False):
+        st.info(
+            "💬 **Multi-Agent Debate System Ready**\n\n"
+            "Once you generate the Agentic Plan above, three specialized AI agents will create "
+            "their initial market perspectives. Then you can start the full debate to see them "
+            "challenge each other's views and reach consensus."
+        )
 
 # ---------- Visualizations ----------
 st.subheader("📈 Data Visualizations")
