@@ -460,7 +460,16 @@ if round_1_positions:
             st.session_state.debate_running = False
         
         st.markdown("### 🔥 Ready to see the agents debate?")
-        st.info("Each agent has analyzed the market and staked a position. Continue to watch them challenge each other and build consensus.")
+        st.info(
+            "**Multi-Agent Debate System**\n\n"
+            "Three specialized agents have each analyzed the market and staked independent positions:\n\n"
+            "📊 **Planner** - Focuses on actionable opportunities and strategic decisions\n"
+            "📉 **Market Analyst** - Focuses on economic data, rates trends, and market conditions\n"
+            "🛡️ **Risk Officer** - Focuses on risks, vulnerabilities, and protective measures\n\n"
+            "Each agent's **confidence level is independent** of what others conclude. They can each be 80% confident in their own analysis "
+            "while reaching completely different conclusions (Bullish/Neutral/Bearish). This diversity of perspective is the strength of the system.\n\n"
+            "Continue to watch them challenge each other's reasoning and build toward consensus."
+        )
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
@@ -482,14 +491,6 @@ if round_1_positions:
     
     # Three-column debate layout with round selection (shown for both complete and incomplete debates)
     st.markdown("### 📋 Complete Debate Transcript")
-    
-    # Info box explaining confidence vs. position
-    st.info(
-        "💡 **Understanding Confidence Levels:** Each agent's confidence represents how certain they are about **their own analysis**, "
-        "not agreement with other agents. Agents can have the same confidence level (e.g., 80%) while reaching completely different "
-        "conclusions (Bullish/Neutral/Bearish) because they analyze from specialized perspectives: Planner focuses on opportunities, "
-        "Market Analyst on economic conditions, and Risk Officer on potential downsides."
-    )
     
     # Round selector buttons
     col_btn1, col_btn2, col_btn3 = st.columns(3)
