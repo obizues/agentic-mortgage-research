@@ -40,6 +40,39 @@ st.markdown(
         section[data-testid="stSidebar"] > div:first-child {
             padding-top: 1rem;
         }
+        /* Make sidebar toggle button more visible */
+        button[kind="header"] {
+            background: rgba(10, 116, 218, 0.1) !important;
+            border: 2px solid #0a74da !important;
+            border-radius: 4px !important;
+            padding: 8px !important;
+        }
+        button[kind="header"]:hover {
+            background: rgba(10, 116, 218, 0.2) !important;
+            box-shadow: 0 0 8px rgba(10, 116, 218, 0.4) !important;
+        }
+        /* Collapsed sidebar control button (when sidebar is hidden) */
+        button[data-testid="collapsedControl"] {
+            background: linear-gradient(135deg, #0a74da 0%, #00c48c 100%) !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            box-shadow: 0 2px 12px rgba(10, 116, 218, 0.4) !important;
+        }
+        button[data-testid="collapsedControl"]:hover {
+            box-shadow: 0 4px 16px rgba(10, 116, 218, 0.6) !important;
+            transform: scale(1.05);
+        }
+        /* Mobile-specific enhancements */
+        @media (max-width: 768px) {
+            button[kind="header"] {
+                padding: 12px !important;
+                border-width: 3px !important;
+            }
+            button[data-testid="collapsedControl"] {
+                padding: 16px !important;
+                box-shadow: 0 4px 16px rgba(10, 116, 218, 0.6) !important;
+            }
+        }
         .stButton > button {
             font-size: 0.8rem;
             line-height: 1.1;
