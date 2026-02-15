@@ -475,8 +475,7 @@ if round_1_positions:
             "Each AI brings its own specialized perspective (see their initial positions below):\n\n"
             "📊 **Planner AI** sees opportunities & strategy | "
             "📉 **Market Analyst AI** sees trends & patterns | "
-            "🛡️ **Risk Officer AI** sees risks & concerns\n\n"
-            "Run the full debate to see Rounds 2 & 3 cross-examination and get an executive summary of the final consensus."
+            "🛡️ **Risk Officer AI** sees risks & concerns"
         )
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
@@ -485,9 +484,10 @@ if round_1_positions:
                 st.session_state.debate_running = False
             
             if not st.session_state.debate_running:
-                if st.button("🔥 See Rounds 2 & 3 & Summary", use_container_width=True, type="primary", key="continue_debate_btn"):
+                if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
                     st.session_state.debate_running = True
                     st.rerun()
+                st.caption("Generates Rounds 2 & 3 cross-examination, executive summary & consensus recommendation")
             else:
                 can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
                 if error_msg:
