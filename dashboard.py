@@ -961,10 +961,14 @@ Provide:
             # Validation stats
             val_stats = debate_db.get_validation_stats()
             if val_stats['total_validated'] > 0:
-                st.markdown("**📚 Emerging Patterns**")
+                st.markdown("**📚 System Learning & Value**")
                 st.caption(
-                    "💡 **How Patterns Inform Future Predictions:**\n"
-                    "The table below shows patterns learned from past debates, including their accuracy, frequency, and condition. "
+                    "This section tracks past predictions and system performance.\n\n"
+                    "- **Consensus Score**: How aligned the agents were in their final votes\n"
+                    "- **Validation Status**: Whether predictions matched actual market movements\n"
+                    "- **Accuracy Tracking**: Overall system performance over time\n\n"
+                    "💡 **Value**: Learn from past debates to see if the multi-agent system's predictions have been accurate.\n\n"
+                    "**Emerging Patterns**: The table below shows patterns learned from past debates, including their accuracy, frequency, and condition.\n"
                     "Agents use these patterns to guide their future recommendations. Patterns with higher accuracy and frequency are weighted more heavily, helping agents recognize market conditions that have historically resulted in correct forecasts."
                 )
                 try:
