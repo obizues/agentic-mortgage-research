@@ -204,7 +204,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.info("App version: v1.3.3 - UX Polish")
+st.sidebar.info("📱 App version: v1.3.3 - UX Polish")
 
 st.sidebar.markdown(
     """
@@ -269,7 +269,7 @@ with st.sidebar.expander("📂 Project Documentation", expanded=False):
         """
     )
 
-with st.sidebar.expander("Tech Stack", expanded=False):
+with st.sidebar.expander("🛠️ Tech Stack", expanded=False):
     st.markdown(
         """
         **Tech Stack**
@@ -295,7 +295,7 @@ with st.sidebar.expander("Tech Stack", expanded=False):
         """
     )
 
-with st.sidebar.expander("System Design Notes", expanded=False):
+with st.sidebar.expander("📋 System Design Notes", expanded=False):
     st.markdown(
         """
         - **Multi-Round Debate System**: Agents engage in 3-round debates (Initial → Cross-Examination → Consensus) with automatic Round 1 on plan execution. Button appears to continue to Rounds 2 & 3.
@@ -438,7 +438,7 @@ def run_action_ui(action_name, force=False, use_spinner=True, requires_llm=False
 
 # ---------- Sidebar ----------
 
-with st.sidebar.expander("Agent Controls", expanded=False):
+with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
     force_refresh = st.checkbox("Force refresh (Agentic Plan only)", value=False)
 
     # Main actions
