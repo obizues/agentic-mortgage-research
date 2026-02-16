@@ -126,6 +126,26 @@ The debate system demonstrates true agentic autonomy where agents:
 
 ---
 
+## 📊 What's New in v1.3.4 (Stable Baseline - Learning Ready)
+
+**v1.3.4** is a stable checkpoint before implementing **AI learning from outcome validation**. This release stabilizes all UX improvements and performance optimizations.
+
+### Key Updates
+- **Sidebar consistency**: All sections now have emoji icons for visual scanning
+- **Collapsible data visualization**: Market charts hidden by default, expandable on-demand
+- **Full prediction history tracking**: Accuracy chart now shows all debates (validated + pending) for complete learning trajectory
+- **iOS dark mode fixes**: Text visibility restored on iPhone 13 Chrome while preserving blue theme
+- **Consensus clarity**: Fixed 2-1 vs 3-0 messaging confusion (majority decision vs unanimous)
+
+### Technical Foundation
+- All validation infrastructure in place for upcoming learning system
+- Historical debate database with outcome tracking ready for pattern extraction
+- UI/UX fully stabilized for feature additions
+
+**Next**: v1.3.5 will add **actual AI learning** - agents will improve predictions based on past validation results.
+
+### Previous Release
+
 ## 🆕 What's New in v1.3.3 (UX Polish)
 
 **v1.3.3** focuses on **debate workflow smoothness**, **honest consensus framing**, and **clearer result presentation**.

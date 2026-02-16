@@ -204,7 +204,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.info("📱 App version: v1.3.3 - UX Polish")
+st.sidebar.info("📱 App version: v1.3.4 - Baseline (Learning Ready)")
 
 st.sidebar.markdown(
     """
