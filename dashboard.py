@@ -963,8 +963,12 @@ Provide:
             if val_stats['total_validated'] > 0:
                 col1, col2, col3 = st.columns(3)
                 col1.metric("Total Validated", val_stats['total_validated'])
-                col2.metric("Accuracy Rate", f"{val_stats['accuracy_rate']}%")
+                col2.metric("Correct Rate", f"{val_stats['accuracy_rate']}%")
                 col3.metric("Avg Accuracy", f"{val_stats['avg_accuracy']:.1f}%")
+
+                st.caption(
+                    "Correct Rate = % of debates marked correct. Avg Accuracy = magnitude of market move when correct."
+                )
                 
                 # Accuracy trend chart
                 st.markdown("**📈 Prediction History & Learning**")
@@ -978,10 +982,17 @@ Provide:
                     validated = df_trend[df_trend['status'] != 'pending']
                     pending = df_trend[df_trend['status'] == 'pending']
                     
+                    # Use integer ticks for debate numbers
+                    tick_values = sorted(df_trend['debate_num'].unique().tolist())
+
                     # Validated line (solid)
                     if not validated.empty:
                         chart_validated = alt.Chart(validated).mark_line(point=True, color='#0a74da', size=3).encode(
-                            x=alt.X('debate_num:Q', title='Debate Number', axis=alt.Axis(format='d', tickMinStep=1)),
+                            x=alt.X(
+                                'debate_num:Q',
+                                title='Debate Number',
+                                axis=alt.Axis(format='d', values=tick_values)
+                            ),
                             y=alt.Y('accuracy:Q', title='Accuracy (%)', scale=alt.Scale(domain=[0, 100])),
                             tooltip=[
                                 alt.Tooltip('debate_num:Q', title='Debate #'),
@@ -996,7 +1007,11 @@ Provide:
                     # Pending points (lighter, dashed line implied)
                     if not pending.empty:
                         chart_pending = alt.Chart(pending).mark_point(color='#ccc', size=60, opacity=0.5).encode(
-                            x=alt.X('debate_num:Q', title='Debate Number', axis=alt.Axis(format='d', tickMinStep=1)),
+                            x=alt.X(
+                                'debate_num:Q',
+                                title='Debate Number',
+                                axis=alt.Axis(format='d', values=tick_values)
+                            ),
                             y=alt.Y('accuracy:Q', title='Accuracy (%)'),
                             tooltip=[
                                 alt.Tooltip('debate_num:Q', title='Debate #'),
