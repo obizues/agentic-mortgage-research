@@ -966,10 +966,11 @@ Provide:
                 col2.metric("Direction Correct", f"{val_stats['accuracy_rate']}%")
                 col3.metric("Mortgage Rate Move (Avg %)", f"{val_stats['avg_accuracy']:.1f}%")
 
-                st.caption(
-                    "Direction Correct = % of debates where the rate moved the predicted way. "
-                    "Mortgage Rate Move = average percent change in the 30-year rate from debate date to validation date."
-                )
+                    st.caption(
+                        "Direction Correct = % of debates where the predicted direction (bullish, bearish, neutral) matched the actual outcome, regardless of category. "
+                        "Mortgage Rate Move = average percent change in the 30-year rate from debate date to validation date. "
+                        "\n\nAccuracy for each direction (bullish, bearish, neutral) is calculated separately and shows how often predictions for that specific direction were correct. This means Direction Correct can be high even if accuracy for individual directions is lower, depending on the distribution and correctness of predictions across categories."
+                    )
                 
                 # Accuracy trend charts
                 st.markdown("**📈 Prediction History & Learning**")
