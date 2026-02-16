@@ -537,45 +537,48 @@ if round_1_positions:
             if "debate_in_progress" not in st.session_state:
                 st.session_state.debate_in_progress = False
 
-            if st.session_state.debate_in_progress:
-                st.button("🔥 Start Debate", width="stretch", type="primary", key="continue_debate_btn_disabled", disabled=True)
-            else:
-                # Simple button - click triggers immediate execution check
-                if st.button("🔥 Start Debate", width="stretch", type="primary", key="continue_debate_btn"):
-                    st.session_state.debate_in_progress = True
-                    # First verify LLM client is available
-                    if llm_client is None:
-                        st.error(f"❌ LLM not available: {llm_init_error}")
-                        st.session_state.debate_in_progress = False
-                    elif agent.llm_client is None:
-                        st.error("❌ Agent LLM client is None. This shouldn't happen – please refresh the page.")
+            # Single button; disabled state prevents duplicate rendering
+            if st.button(
+                "🔥 Start Debate",
+                width="stretch",
+                type="primary",
+                key="continue_debate_btn",
+                disabled=st.session_state.debate_in_progress,
+            ):
+                st.session_state.debate_in_progress = True
+                # First verify LLM client is available
+                if llm_client is None:
+                    st.error(f"❌ LLM not available: {llm_init_error}")
+                    st.session_state.debate_in_progress = False
+                elif agent.llm_client is None:
+                    st.error("❌ Agent LLM client is None. This shouldn't happen – please refresh the page.")
+                    st.session_state.debate_in_progress = False
+                else:
+                    # Check cooldown when clicked
+                    can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
+                    if error_msg:
+                        st.warning(error_msg)
                         st.session_state.debate_in_progress = False
                     else:
-                        # Check cooldown when clicked
-                        can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
-                        if error_msg:
-                            st.warning(error_msg)
+                        # Run the debate
+                        try:
+                            with st.spinner("🎯 Running cross-examination and consensus rounds..."):
+                                result = agent.continue_debate(force=True)
+                                
+                                # Verify debate actually completed
+                                if "debate_results" in agent.knowledge:
+                                    mark_llm_action_success(requires_llm=True)
+                                    agent.save_debate_to_database(debate_db)
+                                    st.success("✅ Debate completed successfully! Refreshing...")
+                                    time.sleep(0.5)  # Brief pause so user sees success message
+                                    st.session_state.debate_in_progress = False
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Debate did not complete properly. Check agent logs below.")
+                                    st.session_state.debate_in_progress = False
+                        except Exception as e:
+                            st.error(f"❌ Error running debate: {e}")
                             st.session_state.debate_in_progress = False
-                        else:
-                            # Run the debate
-                            try:
-                                with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                                    result = agent.continue_debate(force=True)
-                                    
-                                    # Verify debate actually completed
-                                    if "debate_results" in agent.knowledge:
-                                        mark_llm_action_success(requires_llm=True)
-                                        agent.save_debate_to_database(debate_db)
-                                        st.success("✅ Debate completed successfully! Refreshing...")
-                                        time.sleep(0.5)  # Brief pause so user sees success message
-                                        st.session_state.debate_in_progress = False
-                                        st.rerun()
-                                    else:
-                                        st.error("❌ Debate did not complete properly. Check agent logs below.")
-                                        st.session_state.debate_in_progress = False
-                            except Exception as e:
-                                st.error(f"❌ Error running debate: {e}")
-                                st.session_state.debate_in_progress = False
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
