@@ -51,14 +51,18 @@ st.markdown(
         }
 
         /* Make disabled buttons visibly greyed out */
+        button:disabled,
+        button[disabled],
         .stButton > button:disabled,
-        .stButton > button[disabled] {
-            background: #d1d5db !important;
+        .stButton > button[disabled],
+        .stButton > button:disabled:hover {
+            background-color: #e5e7eb !important;
             color: #6b7280 !important;
-            border: 1px solid #cbd5e1 !important;
+            border: 1px solid #d1d5db !important;
             opacity: 0.6 !important;
             filter: grayscale(100%) !important;
             cursor: not-allowed !important;
+            box-shadow: none !important;
         }
         
         /* Sidebar text must be dark */
