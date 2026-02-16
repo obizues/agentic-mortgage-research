@@ -474,10 +474,16 @@ with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
                 debate_id = agent.save_debate_to_database(debate_db)
                 
                 # Auto-validate immediately using current rates
-                if debate_id and "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
-                    current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
-                    validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
-                    st.info(f"[Learning] Debate #{debate_id} validated: {validation_result['status'].upper()}")
+                if debate_id:
+                    try:
+                        if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
+                            current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
+                            validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
+                            st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
+                        else:
+                            st.warning(f"[Learning] Debate #{debate_id} saved but could not auto-validate (no rate data)")
+                    except Exception as e:
+                        st.warning(f"[Learning] Debate #{debate_id} saved but validation error: {str(e)}")
                 
                 st.success(result)
                 st.rerun()
@@ -532,6 +538,25 @@ if should_auto_run:
                     agent.llm_client = None
             st.session_state.initializing = False
     st.session_state.first_run = False
+
+# Auto-validate any pending debates (catch-all in case auto-validation missed any)
+if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
+    try:
+        current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
+        recent_debates = debate_db.get_recent_debates(limit=50)
+        pending = [d for d in recent_debates if d['validation_status'] is None]
+        
+        if pending:
+            with st.status(f"🤖 Auto-validating {len(pending)} pending debate(s)...", expanded=False) as validation_status:
+                for debate in pending:
+                    try:
+                        result = debate_db.validate_debate_outcome(debate['id'], current_rate)
+                        st.write(f"✓ Debate #{debate['id']}: {result['status'].upper()}")
+                    except Exception as e:
+                        st.write(f"✗ Debate #{debate['id']}: {str(e)}")
+                validation_status.update(label="✅ Auto-validation complete", state="complete", expanded=False)
+    except Exception as e:
+        pass  # Silent fail - don't interrupt page load
 
 
 
@@ -639,10 +664,16 @@ if round_1_positions:
                                     debate_id = agent.save_debate_to_database(debate_db)
                                     
                                     # Auto-validate immediately using current rates
-                                    if debate_id and "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
-                                        current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
-                                        validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
-                                        st.info(f"[Learning] Debate #{debate_id} validated: {validation_result['status'].upper()}")
+                                    if debate_id:
+                                        try:
+                                            if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
+                                                current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
+                                                validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
+                                                st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
+                                            else:
+                                                st.warning(f"[Learning] Debate #{debate_id} saved but could not auto-validate (no rate data)")
+                                        except Exception as e:
+                                            st.warning(f"[Learning] Debate #{debate_id} saved but validation error: {str(e)}")
                                     
                                     st.session_state.debate_in_progress = False
                                     st.session_state.selected_round = 2  # Auto-advance to Round 2 to show cross-examination
