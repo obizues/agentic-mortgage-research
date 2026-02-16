@@ -307,6 +307,18 @@ Only include actions that should be run. Skip actions if data is recent and unch
             self.fetch_mortgage_rates(force=force)
         self.log("⚙️ System: Analyzing mortgage rate trends...")
         df = self.knowledge["mortgage_rates"].sort_values("date")
+        
+        # Check if we have enough data
+        if df.empty or len(df) < 2:
+            self.log("⚠️ Insufficient mortgage rate data. Using placeholder insights.")
+            self.knowledge["rate_insights"] = {
+                "latest_rate": 6.5,
+                "prior_rate": 6.5,
+                "12_month_avg": 6.5,
+                "trend_signal": "Insufficient Data",
+            }
+            return "Mortgage rates analyzed (insufficient data)."
+        
         latest = df.iloc[-1]
         prior = df.iloc[-2]
         avg_12 = df.tail(52)["rate"].mean()
@@ -353,7 +365,19 @@ Only include actions that should be run. Skip actions if data is recent and unch
         self.log("⚙️ System: Correlating rates with home price trends...")
         m = self.knowledge["mortgage_rates"].sort_values("date")
         h = self.knowledge["home_prices"].sort_values("date")
+        
+        # Check if we have enough data
+        if m.empty or h.empty:
+            self.log("⚠️ Insufficient data for price correlation. Using placeholder.")
+            self.knowledge["comparison"] = "Home prices data unavailable."
+            return "Compared mortgage rates with home prices (insufficient data)."
+        
         merged = pd.merge_asof(m, h, on="date")
+        if merged.empty:
+            self.log("⚠️ No matching dates for correlation. Using placeholder.")
+            self.knowledge["comparison"] = "Home prices data unavailable."
+            return "Compared mortgage rates with home prices (no matching data)."
+        
         latest = merged.iloc[-1]
         year_ago_date = latest['date'] - pd.DateOffset(years=1)
         year_ago = merged.iloc[(merged['date'] - year_ago_date).abs().argsort()[0]]
