@@ -1212,49 +1212,6 @@ with st.sidebar.expander("📝 Agent Activity Log", expanded=False):
             st.caption("No activity yet - start by running the Agentic Plan")
 
 # ---------- Outcome Validation ----------
-with st.sidebar.expander("📊 Outcome Validation", expanded=False):
-    st.markdown("**Validate Past Debates**")
-    st.info("""**What this does:**
-    
-Compares a past debate's prediction (BULLISH/BEARISH/NEUTRAL) against actual market movements.
-    
-- **BEARISH** = Predicted rates would rise → Checks if rates actually went up
-- **BULLISH** = Predicted rates would fall → Checks if rates actually went down  
-- **NEUTRAL** = Predicted stable rates → Checks if change was <5%
-    
-Accuracy score increases based on how much the market moved in the predicted direction.
-    """)
-    
-    recent_debates = debate_db.get_recent_debates(limit=5)
-    unvalidated = [d for d in recent_debates if d['validation_status'] is None]
-    
-    if unvalidated:
-        st.info(f"{len(unvalidated)} debates pending validation")
-        
-        debate_to_validate = st.selectbox(
-            "Select debate to validate:",
-            options=[d['id'] for d in unvalidated],
-            format_func=lambda x: f"Debate #{x} - {next(d['timestamp'][:10] for d in unvalidated if d['id'] == x)}"
-        )
-        
-        if st.button("Validate Selected Debate") and debate_to_validate:
-            # Get current rate for validation
-            if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
-                current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
-                result = debate_db.validate_debate_outcome(int(debate_to_validate), current_rate)
-                
-                status_emoji = "✅" if result['status'] == 'correct' else "❌"
-                st.success(f"{status_emoji} Validation complete!")
-                st.metric("Accuracy", f"{result['accuracy']:.1f}%")
-                st.metric("Rate Change", f"{result['rate_change_pct']:+.2f}%")
-            else:
-                st.warning("Fetch current data first to validate")
-    else:
-        st.success("All recent debates validated!")
-        val_stats = debate_db.get_validation_stats()
-        if val_stats['total_validated'] > 0:
-            st.metric("Overall Accuracy", f"{val_stats['accuracy_rate']}%")
-            st.metric("Correct Predictions", f"{val_stats['correct_count']}/{val_stats['total_validated']}")
 
 # ---------- Diagnostics (Simplified for v1.3.1) ----------
 with st.sidebar.expander("🧪 Diagnostics", expanded=False):
