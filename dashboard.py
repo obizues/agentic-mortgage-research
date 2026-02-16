@@ -953,6 +953,11 @@ Provide:
                 st.caption(
                     "**Emerging Patterns**: Agents learn from past debates. When current market conditions match a learned pattern, agents use it to guide their next recommendation. Patterns with higher accuracy and frequency have more influence."
                 )
+                learned_patterns = None
+                try:
+                    learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
+                except TypeError:
+                    learned_patterns = debate_db.get_learned_patterns(limit=5)
                 if learned_patterns:
                     import pandas as pd
                     pattern_data = []
