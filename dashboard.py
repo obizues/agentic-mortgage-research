@@ -958,6 +958,10 @@ Provide:
                 st.caption(
                     "Agents use learned patterns to inform their future recommendations. Patterns with higher accuracy and frequency are weighted more heavily, so when current market conditions match a learned pattern, agents are more likely to follow its guidance. This helps agents adapt and improve their predictions over time."
                 )
+                try:
+                    learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
+                except TypeError:
+                    learned_patterns = debate_db.get_learned_patterns(limit=5)
                 if learned_patterns:
                     import pandas as pd
                     pattern_data = []
@@ -994,6 +998,8 @@ Provide:
                                 st.caption(f"Rationale: Agent recommendation is guided by this pattern. High accuracy and frequency increase agent confidence (weighted decision-making, reinforcement learning).")
                         else:
                             st.info("No learned patterns match current market conditions. Agent rationale is based on general market analysis.")
+                else:
+                    st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
             
             # Display recent debates
             for debate in recent_debates:
