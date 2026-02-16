@@ -1044,7 +1044,7 @@ Provide:
                 st.divider()
                 
                 # Display learned patterns from validated debates
-                st.markdown("**📚 Learned Patterns from Validated Debates**")
+                st.markdown("**📚 Emerging Patterns (1+ validations)**")
                 try:
                     learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
                 except TypeError:

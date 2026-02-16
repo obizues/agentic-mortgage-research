@@ -408,7 +408,7 @@ class DebateDatabase:
         conn.commit()
         conn.close()
     
-    def get_learned_patterns(self, limit: int = 5, min_times: int = 2) -> List[Dict[str, Any]]:
+    def get_learned_patterns(self, limit: int = 5, min_times: int = 1) -> List[Dict[str, Any]]:
         """Get top learned patterns by frequency and reliability."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -434,7 +434,7 @@ class DebateDatabase:
     
     def get_patterns_summary_for_agents(self) -> str:
         """Generate a summary of learned patterns for agent context."""
-        patterns = self.get_learned_patterns(limit=3)
+        patterns = self.get_learned_patterns(limit=3, min_times=2)
         
         if not patterns:
             return ""
