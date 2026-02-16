@@ -945,101 +945,100 @@ Provide:
         st.info("💡 **Value**: Learn from past debates to see if the multi-agent system's predictions have been accurate.")
         # Get recent debates from database
         recent_debates = debate_db.get_recent_debates(limit=10)
-        
-        if recent_debates:
-            # Validation stats
-            val_stats = debate_db.get_validation_stats()
-            if val_stats['total_validated'] > 0:
-                st.caption(
-                    "**Emerging Patterns**: The agent always prioritizes the current market, but will lean toward a learned pattern if it has proven accurate in similar conditions."
-                )
-                st.caption(
-                    "The formula is:  \n"
-                    "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  \n"
-                    "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
-                    "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
-                )
-                learned_patterns = None
-                try:
-                    learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
-                except TypeError:
-                    learned_patterns = debate_db.get_learned_patterns(limit=5)
-                if learned_patterns:
-                    import pandas as pd
-                    pattern_data = []
-                    for pattern in learned_patterns:
-                        pattern_data.append({
-                            "Prediction": pattern['pattern'],
-                            "Accuracy": float(pattern['accuracy']),
-                            "Frequency": pattern['frequency'],
-                            "Condition": pattern['condition']
-                        })
-                    df_patterns = pd.DataFrame(pattern_data)
-                    st.dataframe(df_patterns, use_container_width=True, hide_index=True)
 
-                    # Short agent recommendation preview with weighted logic
-                    st.markdown("**Current Recommendation Basis**")
-                    if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
-                        current_rate = agent.knowledge['mortgage_rates'].iloc[-1]['rate']
-                        avg_rate = agent.knowledge['mortgage_rates']['rate'].mean()
-                        current_condition = 'Market condition: rates decreasing' if current_rate < avg_rate else 'Market condition: rates increasing'
-                        matched_patterns = df_patterns[df_patterns['Condition'] == current_condition]
-                        if not matched_patterns.empty:
-                            # Use the most accurate pattern
-                            best_pattern = matched_patterns.iloc[matched_patterns['Accuracy'].astype(float).idxmax()]
-                            accuracy = float(best_pattern['Accuracy']) / 100.0
-                            wp = accuracy * 0.25
-                            wm = 1 - wp
-                            # Market signal: +1 for decreasing, -1 for increasing
-                            market_signal = 1 if current_condition == 'Market condition: rates decreasing' else -1
-                            # Pattern signal: +1 for BULLISH, -1 for BEARISH, 0 for NEUTRAL
-                            pred = best_pattern['Prediction'].upper()
-                            if 'BULLISH' in pred:
-                                pattern_signal = 1
-                            elif 'BEARISH' in pred:
-                                pattern_signal = -1
-                            else:
-                                pattern_signal = 0
-                            final_score = wm * market_signal + wp * pattern_signal
-                            if final_score > 0.1:
-                                rec = 'BULLISH'
-                            elif final_score < -0.1:
-                                rec = 'BEARISH'
-                            else:
-                                rec = 'NEUTRAL'
-                            st.write(f"Pattern: {best_pattern['Prediction']} | Accuracy: {best_pattern['Accuracy']}% | Used for: {best_pattern['Condition']}")
-                            st.write(f"**Weighted Recommendation:** {rec}  ")
-                            st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, Final Score = {final_score:.2f}")
+        # Display recent debates behind an expander at the very bottom
+        if recent_debates:
+            with st.expander("Show Individual Debates", expanded=False):
+                for debate in recent_debates:
+                    with st.expander(
+                        f"Debate #{debate['id']} - {debate['timestamp'][:19]} - {debate['final_recommendation']}", 
+                        expanded=False
+                    ):
+                        col1, col2, col3 = st.columns(3)
+                        col1.metric("Consensus", f"{debate['consensus_score']:.0f}%")
+                        col2.metric("Cost", f"${debate['session_cost']:.4f}")
+                        if debate['validation_status']:
+                            status_emoji = "✅" if debate['validation_status'] == 'correct' else "❌"
+                            col3.metric(
+                                "Validation", 
+                                f"{status_emoji} {debate['validation_status'].title()}",
+                                delta=f"{debate['validation_accuracy']:.0f}% accurate" if debate['validation_accuracy'] else None
+                            )
                         else:
-                            st.info("No learned patterns match current market conditions.")
-                else:
-                    st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
-            
-            # Display recent debates
-            for debate in recent_debates:
-                with st.expander(
-                    f"Debate #{debate['id']} - {debate['timestamp'][:19]} - {debate['final_recommendation']}", 
-                    expanded=False
-                ):
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Consensus", f"{debate['consensus_score']:.0f}%")
-                    col2.metric("Cost", f"${debate['session_cost']:.4f}")
-                    
-                    if debate['validation_status']:
-                        status_emoji = "✅" if debate['validation_status'] == 'correct' else "❌"
-                        col3.metric(
-                            "Validation", 
-                            f"{status_emoji} {debate['validation_status'].title()}",
-                            delta=f"{debate['validation_accuracy']:.0f}% accurate" if debate['validation_accuracy'] else None
-                        )
-                    else:
-                        col3.metric("Validation", "Pending")
-                    
-                    if st.button(f"View Details", key=f"view_{debate['id']}"):
-                        debate_details = debate_db.get_debate_details(debate['id'])
-                        st.json(debate_details)
+                            col3.metric("Validation", "Pending")
+                        if st.button(f"View Details", key=f"view_{debate['id']}"):
+                            debate_details = debate_db.get_debate_details(debate['id'])
+                            st.json(debate_details)
         else:
             st.info("No historical debates yet. Run your first debate to see results here!")
+
+        # Validation stats and emerging patterns at the bottom
+        val_stats = debate_db.get_validation_stats()
+        if val_stats['total_validated'] > 0:
+            st.caption(
+                "**Emerging Patterns**: The agent always prioritizes the current market, but will lean toward a learned pattern if it has proven accurate in similar conditions."
+            )
+            st.caption(
+                "The formula is:  \n"
+                "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  \n"
+                "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
+                "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
+            )
+            learned_patterns = None
+            try:
+                learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
+            except TypeError:
+                learned_patterns = debate_db.get_learned_patterns(limit=5)
+            if learned_patterns:
+                import pandas as pd
+                pattern_data = []
+                for pattern in learned_patterns:
+                    pattern_data.append({
+                        "Prediction": pattern['pattern'],
+                        "Accuracy": float(pattern['accuracy']),
+                        "Frequency": pattern['frequency'],
+                        "Condition": pattern['condition']
+                    })
+                df_patterns = pd.DataFrame(pattern_data)
+                st.dataframe(df_patterns, use_container_width=True, hide_index=True)
+
+                # Short agent recommendation preview with weighted logic
+                st.markdown("**Current Recommendation Basis**")
+                if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
+                    current_rate = agent.knowledge['mortgage_rates'].iloc[-1]['rate']
+                    avg_rate = agent.knowledge['mortgage_rates']['rate'].mean()
+                    current_condition = 'Market condition: rates decreasing' if current_rate < avg_rate else 'Market condition: rates increasing'
+                    matched_patterns = df_patterns[df_patterns['Condition'] == current_condition]
+                    if not matched_patterns.empty:
+                        # Use the most accurate pattern
+                        best_pattern = matched_patterns.iloc[matched_patterns['Accuracy'].astype(float).idxmax()]
+                        accuracy = float(best_pattern['Accuracy']) / 100.0
+                        wp = accuracy * 0.25
+                        wm = 1 - wp
+                        # Market signal: +1 for decreasing, -1 for increasing
+                        market_signal = 1 if current_condition == 'Market condition: rates decreasing' else -1
+                        # Pattern signal: +1 for BULLISH, -1 for BEARISH, 0 for NEUTRAL
+                        pred = best_pattern['Prediction'].upper()
+                        if 'BULLISH' in pred:
+                            pattern_signal = 1
+                        elif 'BEARISH' in pred:
+                            pattern_signal = -1
+                        else:
+                            pattern_signal = 0
+                        final_score = wm * market_signal + wp * pattern_signal
+                        if final_score > 0.1:
+                            rec = 'BULLISH'
+                        elif final_score < -0.1:
+                            rec = 'BEARISH'
+                        else:
+                            rec = 'NEUTRAL'
+                        st.write(f"Pattern: {best_pattern['Prediction']} | Accuracy: {best_pattern['Accuracy']}% | Used for: {best_pattern['Condition']}")
+                        st.write(f"**Weighted Recommendation:** {rec}  ")
+                        st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, Final Score = {final_score:.2f}")
+                    else:
+                        st.info("No learned patterns match current market conditions.")
+            else:
+                st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
 
 else:
     # Helpful message when debate data isn't loaded (e.g., after app redeploy)
