@@ -31,13 +31,10 @@ st.markdown(
     """
     <style>
         /* Force light color scheme globally */
-        :root, html, body {
-            color-scheme: light !important;
-        }
-        
-        /* Ensure text is always readable - target ONLY plain text, not styled components */
-        .stMarkdown p, .stText, p:not([style]), span:not([style]) {
-            color: #262730 !important;
+                st.markdown(
+                    "Agents learn from past debates. When current market conditions match a learned pattern, agents use it to help guide their next recommendation. "
+                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence."
+                )
         }
         
         /* Ensure links are visible */
@@ -951,7 +948,10 @@ Provide:
         # Get recent debates from database
         recent_debates = debate_db.get_recent_debates(limit=10)
 
-        # Display recent debates behind an expander at the very bottom
+
+        # ...existing code for validation stats, emerging patterns, etc...
+
+        # Move 'Show Individual Debates' expander to the bottom
         if recent_debates:
             with st.expander("Show Individual Debates", expanded=False):
                 for debate in recent_debates:
