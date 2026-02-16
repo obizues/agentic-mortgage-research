@@ -942,7 +942,7 @@ Provide:
     # Historical Debates Section (moved below Executive Summary)
     st.divider()
     with st.expander("📚 Historical Debates & System Learning", expanded=False):
-        st.info("💡 **Value**: Learn from past debates to see if the multi-agent system's predictions have been accurate.")
+        st.info("💡 **Value**: Learn from past debates using historical multi-agent system's predictions' accuracy.")
         # Get recent debates from database
         recent_debates = debate_db.get_recent_debates(limit=10)
 
@@ -976,14 +976,8 @@ Provide:
         val_stats = debate_db.get_validation_stats()
         if val_stats['total_validated'] > 0:
             st.caption(
-                "**Emerging Patterns**: The agent always prioritizes the current market, but will lean toward a learned pattern if it has proven accurate in similar conditions."
-            )
-            st.caption(
-                "The formula is:  \n"
-                "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  \n"
-                "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
-                "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
-            )
+                "**Emerging Patterns**"
+                )
             learned_patterns = None
             try:
                 learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
@@ -1035,6 +1029,11 @@ Provide:
                         st.write(f"Pattern: {best_pattern['Prediction']} | Accuracy: {best_pattern['Accuracy']}% | Used for: {best_pattern['Condition']}")
                         st.write(f"**Weighted Recommendation:** {rec}  ")
                         st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, Final Score = {final_score:.2f}")
+                        st.write(f"**Formula:**"
+                                "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  \n"
+                                "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
+                                "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
+                        )
                     else:
                         st.info("No learned patterns match current market conditions.")
             else:
