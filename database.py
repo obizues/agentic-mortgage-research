@@ -66,6 +66,22 @@ class DebateDatabase:
             )
         """)
         
+        # Lessons learned: stores patterns extracted from validated outcomes
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS lessons_learned (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                debate_id INTEGER NOT NULL,
+                pattern_description TEXT NOT NULL,
+                prediction_type TEXT NOT NULL,
+                condition_description TEXT,
+                accuracy_observed REAL,
+                times_observed INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (debate_id) REFERENCES debates(id)
+            )
+        """)
+        
         conn.commit()
         conn.close()
     
@@ -263,6 +279,12 @@ class DebateDatabase:
         conn.commit()
         conn.close()
         
+        # Extract pattern for future learning
+        market_snapshot = details.get('market_snapshot', {})
+        self.extract_pattern_from_validation(
+            debate_id, status, accuracy, market_snapshot, recommendation
+        )
+        
         return {
             'status': status,
             'accuracy': accuracy,
@@ -321,4 +343,108 @@ class DebateDatabase:
         results = [dict(zip(columns, row)) for row in cursor.fetchall()]
         
         conn.close()
+        return results    
+    def extract_pattern_from_validation(
+        self,
+        debate_id: int,
+        validation_status: str,
+        accuracy: float,
+        market_snapshot: Dict[str, Any],
+        final_recommendation: str
+    ) -> None:
+        """Extract and store a learned pattern from a validation result."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Determine rate trend
+        mortgage_rate = market_snapshot.get('mortgage_rate', 0)
+        rate_12mo_avg = market_snapshot.get('rate_12mo_avg', mortgage_rate)
+        rate_trend = "increasing" if mortgage_rate > rate_12mo_avg else "decreasing"
+        
+        # Determine prediction type
+        prediction_type = "NEUTRAL"
+        if final_recommendation:
+            if "bullish" in final_recommendation.lower():
+                prediction_type = "BULLISH"
+            elif "bearish" in final_recommendation.lower():
+                prediction_type = "BEARISH"
+        
+        # Create pattern description
+        condition_desc = f"Market condition: rates {rate_trend}"
+        pattern_desc = f"{prediction_type} prediction when {rate_trend}"
+        
+        # Check if similar pattern exists
+        cursor.execute("""
+            SELECT id, times_observed, accuracy_observed FROM lessons_learned
+            WHERE prediction_type = ? AND condition_description = ?
+            ORDER BY last_updated DESC LIMIT 1
+        """, (prediction_type, condition_desc))
+        
+        existing = cursor.fetchone()
+        
+        if existing:
+            # Update existing pattern
+            pattern_id, times_obs, avg_accuracy = existing
+            new_times = times_obs + 1
+            # Update average accuracy
+            new_accuracy = (avg_accuracy * times_obs + accuracy) / new_times
+            
+            cursor.execute("""
+                UPDATE lessons_learned
+                SET times_observed = ?,
+                    accuracy_observed = ?,
+                    last_updated = ?
+                WHERE id = ?
+            """, (new_times, new_accuracy, datetime.now(), pattern_id))
+        else:
+            # Create new pattern
+            cursor.execute("""
+                INSERT INTO lessons_learned
+                (debate_id, pattern_description, prediction_type, 
+                 condition_description, accuracy_observed, times_observed)
+                VALUES (?, ?, ?, ?, ?, 1)
+            """, (debate_id, pattern_desc, prediction_type, condition_desc, accuracy))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_learned_patterns(self, limit: int = 5) -> List[Dict[str, Any]]:
+        """Get top learned patterns by frequency and reliability."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                pattern_description,
+                prediction_type,
+                condition_description,
+                accuracy_observed,
+                times_observed
+            FROM lessons_learned
+            WHERE times_observed >= 2
+            ORDER BY accuracy_observed DESC, times_observed DESC
+            LIMIT ?
+        """, (limit,))
+        
+        columns = ['pattern', 'prediction', 'condition', 'accuracy', 'frequency']
+        results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        
+        conn.close()
         return results
+    
+    def get_patterns_summary_for_agents(self) -> str:
+        """Generate a summary of learned patterns for agent context."""
+        patterns = self.get_learned_patterns(limit=3)
+        
+        if not patterns:
+            return ""
+        
+        summary = "\n### Historical Lessons Learned:\n"
+        for i, p in enumerate(patterns, 1):
+            summary += (
+                f"{i}. {p['pattern']}\n"
+                f"   - Accuracy: {p['accuracy']:.1f}% (observed in {p['frequency']} debates)\n"
+                f"   - Condition: {p['condition']}\n"
+            )
+        
+        return summary

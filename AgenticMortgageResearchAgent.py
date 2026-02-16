@@ -14,13 +14,14 @@ except ImportError:
 
 class AgenticMortgageResearchAgent:
     import config
-    def __init__(self, log_callback=None, llm_client: Optional['Anthropic'] = None):
+    def __init__(self, log_callback=None, llm_client: Optional['Anthropic'] = None, debate_db=None):
         self.goal = "Understand current US mortgage rate trends and risks"
         self.knowledge = {}
         self.logs = []
         self.log_callback = log_callback
         self.last_fetch_dates = {}  # track when data was fetched
         self.llm_client = llm_client  # Optional Claude client for LLM-based reasoning
+        self.debate_db = debate_db  # Database for storing/retrieving debate patterns
         self.session_cost = 0.0  # Track estimated LLM API costs
         # Initialize fetch_timestamps in knowledge for dashboard status display
         self.knowledge["fetch_timestamps"] = {}
@@ -619,6 +620,11 @@ Provide 2-3 concise bullet points for your perspective."""
         comparison = self.knowledge.get("comparison", "No comparison available")
         summary = self.knowledge.get("summary", "Basic market summary")
         
+        # Get learned patterns from previous validated debates
+        learned_patterns = ""
+        if self.debate_db:
+            learned_patterns = self.debate_db.get_patterns_summary_for_agents()
+        
         roles = {
             "Planner": {
                 "emoji": "📊",
@@ -639,7 +645,7 @@ Provide 2-3 concise bullet points for your perspective."""
         for role_name, role_config in roles.items():
             self.log(f"{role_config['emoji']} {role_name}: Formulating initial position...")
             
-            prompt = f"""{role_config['prompt']}
+            prompt = f"""{role_config['prompt']}{learned_patterns}
 
 Market Context:
 - Current 30-year mortgage rate: {rate_insights.get('latest_rate', 'N/A')}%
@@ -686,6 +692,11 @@ Task: Provide your initial market position in 3-4 bullet points. Be specific abo
             self.log("ERROR: Round 1 not completed. Cannot proceed to Round 2.")
             return
         
+        # Get learned patterns from previous validated debates
+        learned_patterns = ""
+        if self.debate_db:
+            learned_patterns = self.debate_db.get_patterns_summary_for_agents()
+        
         round_2_responses = {}
         
         for role_name, agent_data in round_1_positions.items():
@@ -702,7 +713,7 @@ Task: Provide your initial market position in 3-4 bullet points. Be specific abo
             prompt = f"""You are the {role_name}. You previously stated:
 
 YOUR POSITION:
-{agent_data['position']}
+{agent_data['position']}{learned_patterns}
 
 Now you have seen the positions from your peer agents:
 
@@ -748,6 +759,11 @@ Provide 2-3 bullet points. Be specific about which agent you're addressing."""
             self.log("ERROR: Previous rounds not completed. Cannot proceed to Round 3.")
             return
         
+        # Get learned patterns from previous validated debates
+        learned_patterns = ""
+        if self.debate_db:
+            learned_patterns = self.debate_db.get_patterns_summary_for_agents()
+        
         final_votes = {}
         vote_stances = []
         
@@ -757,7 +773,7 @@ Provide 2-3 bullet points. Be specific about which agent you're addressing."""
             
             self.log(f"{agent_r1['emoji']} {role_name}: Casting final vote...")
             
-            prompt = f"""You are the {role_name}. Review your debate history:
+            prompt = f"""You are the {role_name}. Review your debate history:{learned_patterns}
 
 ROUND 1 - Your Initial Position:
 {agent_r1['position']}
