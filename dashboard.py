@@ -1082,7 +1082,7 @@ Provide:
                             rec = 'NEUTRAL'
                         st.write(f"Pattern: {best_pattern['Prediction']} | Accuracy: {best_pattern['Accuracy']}% | Used for: {best_pattern['Condition']}")
                         st.write(f"**Weighted Recommendation:** {rec}  ")
-                        st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, Final Score = {final_score:.2f}")
+                        st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, market signal = {market_signal}, pattern signal = {pattern_signal}, Final Score = {final_score:.2f}")
                         st.write(f"**Formula:**"
                                 "$w_p = \\text{{accuracy}} \\times 0.25$ (pattern weight, max 0.25)  \n"
                                 "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
