@@ -126,6 +126,34 @@ The debate system demonstrates true agentic autonomy where agents:
 
 ---
 
+## 🆕 What's New in v1.3.1 (UX & Infrastructure Hardening)
+
+**v1.3.1** is a polish release focused on **mobile UX improvements**, **session handling**, and **infrastructure stability**—completing the v1.3 cycle with production-ready refinements.
+
+### Mobile & UX Enhancements
+- **Enhanced Sidebar Visibility**: Gradient-styled toggle button with box shadows and larger touch targets (18px on mobile) for better discoverability
+- **Button Clarity**: Added tooltips to disabled Round 2/3 buttons, centered captions explaining process flow ("Runs Rounds 2 & 3 → Voting Consensus → Summary")
+- **Improved Error Messaging**: Inline warning displays instead of full-page blocking blue screens during LLM cooldown periods
+- **Session Persistence**: Helpful info message appears when debate section missing after app redeployment, explaining next steps to users
+- **CSS Specificity Fixes**: Removed unintended borders on share/star/edit/github links, targeting only sidebar toggle
+
+### Agent Structure Clarity
+- **Standardized Icons**: Consistent emoji usage—📊 Planner (Blue), 📉 Market Analyst (Green), 🛡️ Risk Officer (Red), ⚙️ System operations
+- **Icon Rendering**: Replaced device-dependent emojis with universally supported alternatives (⚙️ instead of 🔄)
+- **Cleaner Logs**: Removed confusing role names ("Data Collector", "Senior Analyst") in favor of clear agent/system separation
+
+### Infrastructure
+- **GitHub Actions Keep-Alive**: Automated workflow pings app every 5 minutes to prevent Streamlit Cloud sleep on free tier—eliminates "app not awake" messages for visitors
+- **Simplified Diagnostics**: Streamlined sidebar diagnostics panel to show only essential health checks and data status
+
+### Developer Experience
+- **Documentation Updates**: Sidebar and README.md reflect all v1.3.1 changes with accurate feature descriptions
+- **CHANGELOG.md**: Complete version history tracking from v1.0.0 through v1.3.1
+
+**Migration from v1.3.0**: No breaking changes—all existing functionality preserved. Simply pull latest code and optionally enable GitHub Actions keep-alive workflow.
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites

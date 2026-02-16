@@ -142,7 +142,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.info("App version: v1.3.0 - Multi-Round Debate & Learning")
+st.sidebar.info("App version: v1.3.1 - UX & Infrastructure Hardening")
 
 st.sidebar.markdown(
     """
@@ -207,7 +207,8 @@ with st.sidebar.expander("Tech Stack", expanded=False):
         - Anthropic Claude 3.5 (claude-3-haiku-20240307)
         - FRED API, pandas, requests
         - Streamlit 1.54 + Altair 6.0
-        - HTML/CSS for styled UI components
+        - HTML/CSS with mobile-optimized styling
+        - GitHub Actions (automated keep-alive)
 
         **Agentic AI Features**
         - Multi-round debate system (3 rounds with cross-examination)
@@ -220,7 +221,7 @@ with st.sidebar.expander("Tech Stack", expanded=False):
         - Real-time role execution tracking
         - Emoji-based log filtering
         - Cost tracking per session
-        - Compact, optimized spacing throughout
+        - Mobile-responsive UI with enhanced touch targets
         """
     )
 
@@ -232,14 +233,15 @@ with st.sidebar.expander("System Design Notes", expanded=False):
         - **Round Selection**: Button-based navigation (Round 1/2/3) allows switching between debate stages while maintaining consistent 3-column agent layout.
         - **Multi-Agent Architecture**: Three specialized roles (Planner, Market Analyst, Risk Officer) provide diverse analytical perspectives. Each agent's confidence level reflects certainty in their own analysis, not agreement—agents can have high confidence while reaching different conclusions.
         - **Historical Learning**: SQLite database stores all debates with outcome validation against actual market movements for accuracy tracking.
-        - **Progressive Disclosure**: Round 1 positions display immediately after Agentic Plan. "Continue" button triggers Rounds 2 & 3 on demand for full debate with consensus.
+        - **Progressive Disclosure**: Round 1 positions display immediately after Agentic Plan. "Start Debate" button triggers Rounds 2 & 3 on demand with clear process flow caption and tooltips.
+        - **Session Persistence**: Helpful messages guide users when debate data unavailable (e.g., after app redeploys). Inline error messaging replaces blocking cooldown screens.
+        - **Mobile Optimized**: Enhanced sidebar toggle visibility with gradient styling, larger touch targets (18px on mobile), and device-independent emoji rendering (⚙️ for system operations).
         - **Orchestration**: LLM selects actions from current knowledge state and auto-generates Round 1 positions. Continue button generates Rounds 2 & 3 seamlessly within same view.
         - **Real-Time Feedback**: Emoji-tagged logs stream role execution progress to the UI via callbacks and session state.
         - **Dynamic Rendering**: Markdown-to-HTML conversion handles LLM-generated formatting (bold, lists) in color-coded debate cards with 0.9rem font for optimal fit.
-        - **Compact Layout**: Optimized spacing throughout UI removes unnecessary dividers and white space for cleaner presentation.
         - **Cost Tracking**: Real-time session cost monitoring (~$0.002-0.003 per LLM call) displayed in system metrics.
-        - **Caching**: Fetch timestamps prevent unnecessary API calls unless forced.
-        - **Resilience**: Heuristic planner runs if LLM is unavailable.
+        - **Infrastructure**: GitHub Actions workflow pings app every 5 minutes to prevent sleep on free tier, ensuring instant availability for visitors.
+        - **Resilience**: Heuristic planner runs if LLM is unavailable. Graceful degradation throughout.
         - **Observability**: Decision trace is logged with 3-way filtering (All/LLM/Roles).
         - **Security**: API keys managed via local secrets.toml or environment variables, gitignored for safety.
         """
@@ -832,73 +834,42 @@ Accuracy score increases based on how much the market moved in the predicted dir
             st.metric("Overall Accuracy", f"{val_stats['accuracy_rate']}%")
             st.metric("Correct Predictions", f"{val_stats['correct_count']}/{val_stats['total_validated']}")
 
-# ---------- Diagnostics (Client/Content Troubleshooting) ----------
+# ---------- Diagnostics (Simplified for v1.3.1) ----------
 with st.sidebar.expander("🧪 Diagnostics", expanded=False):
-    st.caption("Use this to verify data and client rendering status.")
+    st.caption("System health and data availability checks")
 
     try:
         st.markdown("**Environment**")
-        st.text(f"streamlit: {st.__version__}")
-        st.text(f"python: {sys.version.split()[0]}")
-        st.text(f"platform: {platform.platform()}")
-        st.text(f"cwd: {os.getcwd()}")
-        st.text(f"llm_enabled: {bool(config.ENABLE_LLM_PLANNING)}")
-        st.text(f"running_in_cloud: {bool(getattr(config, 'RUNNING_IN_CLOUD', False))}")
-        st.text(f"allow_llm_local: {bool(getattr(config, 'ALLOW_LLM_LOCAL', False))}")
-        st.text(f"llm_calls_this_session: {st.session_state.llm_calls}")
-        st.text(f"llm_max_calls: {getattr(config, 'LLM_MAX_CALLS_PER_SESSION', 8)}")
-        st.text(f"llm_cooldown_seconds: {getattr(config, 'LLM_COOLDOWN_SECONDS', 45)}")
-        st.text(f"anthropic_key_set: {bool(getattr(config, 'ANTHROPIC_API_KEY', None))}")
-        st.text(f"fred_key_set: {bool(getattr(config, 'FRED_API_KEY', None))}")
+        st.text(f"Streamlit: {st.__version__} | Python: {sys.version.split()[0]}")
+        st.text(f"Platform: {platform.platform()}")
+        
+        st.markdown("**LLM Configuration**")
+        st.text(f"LLM Enabled: {bool(config.ENABLE_LLM_PLANNING)}")
+        st.text(f"Calls This Session: {st.session_state.llm_calls} / {getattr(config, 'LLM_MAX_CALLS_PER_SESSION', 8)}")
+        st.text(f"Anthropic Key: {'✓ Set' if getattr(config, 'ANTHROPIC_API_KEY', None) else '✗ Missing'}")
+        st.text(f"FRED API Key: {'✓ Set' if getattr(config, 'FRED_API_KEY', None) else '✗ Missing'}")
 
-        secrets_path = os.path.join(os.getcwd(), ".streamlit", "secrets.toml")
-        st.text(f"secrets_file_exists: {os.path.exists(secrets_path)}")
-        st.text(f"secrets_path: {secrets_path}")
-
-        try:
-            st.text(f"secrets_keys: {list(st.secrets.keys())}")
-        except Exception as secrets_exc:
-            st.text(f"secrets_keys: error ({secrets_exc})")
-
-        fred_secret_present = False
-        try:
-            fred_secret_present = "FRED_API_KEY" in st.secrets
-        except Exception:
-            fred_secret_present = False
-        fred_env_present = bool(os.getenv("FRED_API_KEY"))
-        if fred_secret_present:
-            fred_source = "secrets"
-        elif fred_env_present:
-            fred_source = "env"
-        else:
-            fred_source = "missing"
-        st.text(f"fred_key_source: {fred_source}")
-
-        st.markdown("**Data Availability**")
+        st.markdown("**Data Status**")
         rates_df = agent.knowledge.get("mortgage_rates")
         prices_df = agent.knowledge.get("home_prices")
-        st.text(f"mortgage_rates_rows: {0 if rates_df is None else len(rates_df)}")
-        st.text(f"home_prices_rows: {0 if prices_df is None else len(prices_df)}")
+        st.text(f"Mortgage Rates: {0 if rates_df is None else len(rates_df)} rows")
+        st.text(f"Home Prices: {0 if prices_df is None else len(prices_df)} rows")
 
-        st.markdown("**Debate Data**")
+        st.markdown("**Debate Status**")
         round_1 = agent.knowledge.get("debate_round_1", {})
         round_2 = agent.knowledge.get("debate_round_2", {})
         round_3 = agent.knowledge.get("debate_round_3", {})
-        st.text(
-            f"round_1_agents: {list(round_1.keys()) if isinstance(round_1, dict) else 'n/a'}"
-        )
-        st.text(
-            f"round_2_agents: {list(round_2.keys()) if isinstance(round_2, dict) else 'n/a'}"
-        )
-        st.text(
-            f"round_3_agents: {list(round_3.keys()) if isinstance(round_3, dict) else 'n/a'}"
-        )
+        r1_count = len(round_1) if isinstance(round_1, dict) else 0
+        r2_count = len(round_2) if isinstance(round_2, dict) else 0
+        r3_count = len(round_3) if isinstance(round_3, dict) else 0
+        st.text(f"Round 1: {r1_count} agents | Round 2: {r2_count} | Round 3: {r3_count}")
+        
     except Exception as exc:
-        st.error("Diagnostics failed to render.")
+        st.error("Diagnostics error - see logs")
         st.text(str(exc))
 
     st.info(
-        "If charts or text are missing on a client device, it is often caused by content blockers, "
-        "Private Relay/VPN, or network filters that block Streamlit/Vega scripts."
+        "💡 **Troubleshooting**: If content is missing, check for ad blockers, VPN/Private Relay, "
+        "or network filters blocking Streamlit resources."
     )
 
