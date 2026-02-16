@@ -967,16 +967,10 @@ Provide:
                     "The table below shows patterns learned from past debates, including their accuracy, frequency, and condition. "
                     "Agents use these patterns to guide their future recommendations. Patterns with higher accuracy and frequency are weighted more heavily, helping agents recognize market conditions that have historically resulted in correct forecasts."
                 )
-                
-                st.divider()
-                
-                # Display learned patterns from validated debates
-                st.markdown("**📚 Emerging Patterns (1+ validations)**")
                 try:
                     learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
                 except TypeError:
                     learned_patterns = debate_db.get_learned_patterns(limit=5)
-                
                 if learned_patterns:
                     import pandas as pd
                     pattern_data = []
@@ -991,8 +985,6 @@ Provide:
                     st.dataframe(df_patterns, use_container_width=True, hide_index=True)
                 else:
                     st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
-                
-                st.divider()
             
             # Display recent debates
             for debate in recent_debates:
