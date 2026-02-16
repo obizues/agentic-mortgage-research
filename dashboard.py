@@ -512,30 +512,24 @@ if round_1_positions:
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
-            if 'debate_running' not in st.session_state:
-                st.session_state.debate_running = False
-            
-            # Always show the button
-            if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn", disabled=st.session_state.debate_running):
-                st.session_state.debate_running = True
-                st.rerun()
-            
-            st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
-            
-            # If debate is running, execute it BELOW the button
-            if st.session_state.debate_running:
-                # Check cooldown only when actually trying to run
+            # Simple button - click triggers immediate execution check
+            if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
+                # Check cooldown when clicked
                 can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
                 if error_msg:
                     st.warning(error_msg)
-                    st.session_state.debate_running = False
-                    st.rerun()
                 else:
+                    # Run the debate in a spinner
                     with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                        result = agent.continue_debate(force=True)
-                        agent.save_debate_to_database(debate_db)
-                        st.session_state.debate_running = False
-                        st.rerun()
+                        try:
+                            result = agent.continue_debate(force=True)
+                            agent.save_debate_to_database(debate_db)
+                            st.success("✅ Debate complete! Scroll down to see results.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error running debate: {e}")
+            
+            st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
     # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
     col_btn1, col_btn2, col_btn3 = st.columns(3)
