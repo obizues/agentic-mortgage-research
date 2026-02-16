@@ -519,7 +519,7 @@ if round_1_positions:
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
             # Simple button - click triggers immediate execution check
-            if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
+            if st.button("🔥 Start Debate", width="stretch", type="primary", key="continue_debate_btn"):
                 # First verify LLM client is available
                 if llm_client is None:
                     st.error(f"❌ LLM not available: {llm_init_error}")
@@ -552,17 +552,17 @@ if round_1_positions:
     # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
     col_btn1, col_btn2, col_btn3 = st.columns(3)
     with col_btn1:
-        if st.button("📋 Round 1", use_container_width=True, key="round_1_btn"):
+        if st.button("📋 Round 1", width="stretch", key="round_1_btn"):
             st.session_state.selected_round = 1
     with col_btn2:
         r2_available = bool(round_2)
         r2_help = None if r2_available else "Click 'Start Debate' above to unlock this round"
-        if st.button("🔍 Round 2", use_container_width=True, key="round_2_btn", disabled=not r2_available, help=r2_help):
+        if st.button("🔍 Round 2", width="stretch", key="round_2_btn", disabled=not r2_available, help=r2_help):
             st.session_state.selected_round = 2
     with col_btn3:
         r3_available = bool(round_3)
         r3_help = None if r3_available else "Click 'Start Debate' above to unlock this round"
-        if st.button("🤝 Round 3", use_container_width=True, key="round_3_btn", disabled=not r3_available, help=r3_help):
+        if st.button("🤝 Round 3", width="stretch", key="round_3_btn", disabled=not r3_available, help=r3_help):
             st.session_state.selected_round = 3
     
     # ===== SECTION 3: DISPLAY SELECTED ROUND CONTENT =====
@@ -756,7 +756,7 @@ Provide:
                         y='y:Q'
                     )
                     
-                    st.altair_chart(chart + baseline, use_container_width=True)
+                    st.altair_chart(chart + baseline, width="stretch")
                     st.caption("💡 **Tip**: Each point represents a validated debate. Higher accuracy = better predictions.")
                 
                 st.divider()
@@ -809,7 +809,7 @@ if "mortgage_rates" in agent.knowledge and not agent.knowledge["mortgage_rates"]
             y='rate:Q',
             tooltip=['date:T', 'rate:Q']
         ).properties(title='30-Year Fixed Mortgage Rates', height=300),
-        use_container_width=True
+        width="stretch"
     )
 
 # Home Prices Chart
@@ -821,7 +821,7 @@ if "home_prices" in agent.knowledge and not agent.knowledge["home_prices"].empty
             y='price:Q',
             tooltip=['date:T', 'price:Q']
         ).properties(title='US Home Prices Index', height=300),
-        use_container_width=True
+        width="stretch"
     )
 
 # Combined normalized chart
@@ -845,7 +845,7 @@ if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
         color='Metric:N',
         tooltip=['date:T', 'Metric:N', 'Value:Q']
     ).properties(title='Normalized Mortgage Rates vs Home Prices', height=300)
-    st.altair_chart(chart_combined, use_container_width=True)
+    st.altair_chart(chart_combined, width="stretch")
 
 # ---------- Agent Logs ----------
 
