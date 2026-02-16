@@ -512,22 +512,32 @@ if round_1_positions:
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
+            # Check for and display any pending messages from previous button click
+            if 'debate_message' in st.session_state:
+                msg_type, msg_text = st.session_state.debate_message
+                if msg_type == 'warning':
+                    st.warning(msg_text)
+                elif msg_type == 'error':
+                    st.error(msg_text)
+                del st.session_state.debate_message
+            
             # Simple button - click triggers immediate execution check
             if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
                 # Check cooldown when clicked
                 can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
                 if error_msg:
-                    st.warning(error_msg)
+                    st.session_state.debate_message = ('warning', error_msg)
+                    st.rerun()
                 else:
-                    # Run the debate in a spinner
-                    with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                        try:
+                    # Run the debate
+                    try:
+                        with st.spinner("🎯 Running cross-examination and consensus rounds..."):
                             result = agent.continue_debate(force=True)
                             agent.save_debate_to_database(debate_db)
-                            st.success("✅ Debate complete! Scroll down to see results.")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Error running debate: {e}")
+                        st.rerun()
+                    except Exception as e:
+                        st.session_state.debate_message = ('error', f"Error running debate: {e}")
+                        st.rerun()
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
