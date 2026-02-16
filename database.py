@@ -408,7 +408,7 @@ class DebateDatabase:
         conn.commit()
         conn.close()
     
-    def get_learned_patterns(self, limit: int = 5) -> List[Dict[str, Any]]:
+    def get_learned_patterns(self, limit: int = 5, min_times: int = 2) -> List[Dict[str, Any]]:
         """Get top learned patterns by frequency and reliability."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -421,10 +421,10 @@ class DebateDatabase:
                 accuracy_observed,
                 times_observed
             FROM lessons_learned
-            WHERE times_observed >= 2
+            WHERE times_observed >= ?
             ORDER BY accuracy_observed DESC, times_observed DESC
             LIMIT ?
-        """, (limit,))
+        """, (min_times, limit))
         
         columns = ['pattern', 'prediction', 'condition', 'accuracy', 'frequency']
         results = [dict(zip(columns, row)) for row in cursor.fetchall()]

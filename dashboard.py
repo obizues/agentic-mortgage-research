@@ -981,7 +981,7 @@ Provide:
                     # Validated line (solid)
                     if not validated.empty:
                         chart_validated = alt.Chart(validated).mark_line(point=True, color='#0a74da', size=3).encode(
-                            x=alt.X('debate_num:Q', title='Debate Number'),
+                            x=alt.X('debate_num:Q', title='Debate Number', axis=alt.Axis(format='d', tickMinStep=1)),
                             y=alt.Y('accuracy:Q', title='Accuracy (%)', scale=alt.Scale(domain=[0, 100])),
                             tooltip=[
                                 alt.Tooltip('debate_num:Q', title='Debate #'),
@@ -996,7 +996,7 @@ Provide:
                     # Pending points (lighter, dashed line implied)
                     if not pending.empty:
                         chart_pending = alt.Chart(pending).mark_point(color='#ccc', size=60, opacity=0.5).encode(
-                            x=alt.X('debate_num:Q', title='Debate Number'),
+                            x=alt.X('debate_num:Q', title='Debate Number', axis=alt.Axis(format='d', tickMinStep=1)),
                             y=alt.Y('accuracy:Q', title='Accuracy (%)'),
                             tooltip=[
                                 alt.Tooltip('debate_num:Q', title='Debate #'),
@@ -1028,7 +1028,7 @@ Provide:
                 
                 # Display learned patterns from validated debates
                 st.markdown("**📚 Learned Patterns from Validated Debates**")
-                learned_patterns = debate_db.get_learned_patterns(limit=5)
+                learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
                 
                 if learned_patterns:
                     # Create a dataframe for better visualization
@@ -1050,7 +1050,7 @@ Provide:
                         "are used to inform future agent predictions. Higher accuracy and frequency indicate stronger patterns."
                     )
                 else:
-                    st.info("📕 No patterns learned yet. Validate debate outcomes to help the system learn market patterns.")
+                    st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
                 
                 st.divider()
             
