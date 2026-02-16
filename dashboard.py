@@ -951,17 +951,8 @@ Provide:
             val_stats = debate_db.get_validation_stats()
             if val_stats['total_validated'] > 0:
                 st.caption(
-                    "**Emerging Patterns**: The table below shows patterns learned from past debates, including their accuracy, frequency, and condition.\n"
-                    "Agents use these patterns to guide their future recommendations. Patterns with higher accuracy and frequency are weighted more heavily, helping agents recognize market conditions that have historically resulted in correct forecasts."
+                    "**Emerging Patterns**: Agents learn from past debates. When current market conditions match a learned pattern, agents use it to guide their next recommendation. Patterns with higher accuracy and frequency have more influence."
                 )
-                st.markdown("**How Patterns Guide Agent Recommendations**")
-                st.caption(
-                    "Agents use learned patterns to inform their future recommendations. Patterns with higher accuracy and frequency are weighted more heavily, so when current market conditions match a learned pattern, agents are more likely to follow its guidance. This helps agents adapt and improve their predictions over time."
-                )
-                try:
-                    learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
-                except TypeError:
-                    learned_patterns = debate_db.get_learned_patterns(limit=5)
                 if learned_patterns:
                     import pandas as pd
                     pattern_data = []
@@ -975,29 +966,16 @@ Provide:
                     df_patterns = pd.DataFrame(pattern_data)
                     st.dataframe(df_patterns, use_container_width=True, hide_index=True)
 
-                    # Agent Recommendation Preview for Current Conditions
-                    st.markdown("**Agent Recommendation Preview (Industry Standard: Pattern Matching & Weighted Influence)**")
+                    # Short agent recommendation preview
+                    st.markdown("**Current Recommendation Basis**")
                     if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
                         current_condition = 'Market condition: rates decreasing' if agent.knowledge['mortgage_rates'].iloc[-1]['rate'] < agent.knowledge['mortgage_rates']['rate'].mean() else 'Market condition: rates increasing'
                         matched_patterns = df_patterns[df_patterns['Condition'] == current_condition]
                         if not matched_patterns.empty:
                             for idx, row in matched_patterns.iterrows():
-                                st.write(f"Prediction: {row['Prediction']} | Accuracy: {row['Accuracy']}% | Frequency: {row['Frequency']} | Condition: {row['Condition']}")
-                                st.caption(f"Industry Standard: Agent recommendations are guided by matched patterns. Higher accuracy and frequency increase agent confidence in following this pattern (reinforcement learning, weighted decision-making).")
+                                st.write(f"Pattern: {row['Prediction']} | Accuracy: {row['Accuracy']}% | Used for: {row['Condition']}")
                         else:
-                            st.info("No learned patterns match current market conditions. Agents will rely on general market analysis.")
-
-                    # Pattern Matching Highlight for New Debates
-                    st.markdown("**Pattern Matching for New Debates (Explainable AI Best Practice)**")
-                    if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
-                        current_condition = 'Market condition: rates decreasing' if agent.knowledge['mortgage_rates'].iloc[-1]['rate'] < agent.knowledge['mortgage_rates']['rate'].mean() else 'Market condition: rates increasing'
-                        matched_patterns = df_patterns[df_patterns['Condition'] == current_condition]
-                        if not matched_patterns.empty:
-                            for idx, row in matched_patterns.iterrows():
-                                st.write(f"🔍 <b>Matched Pattern:</b> {row['Prediction']} | <b>Accuracy:</b> {row['Accuracy']}% | <b>Frequency:</b> {row['Frequency']} | <b>Condition:</b> {row['Condition']}", unsafe_allow_html=True)
-                                st.caption(f"Rationale: Agent recommendation is guided by this pattern. High accuracy and frequency increase agent confidence (weighted decision-making, reinforcement learning).")
-                        else:
-                            st.info("No learned patterns match current market conditions. Agent rationale is based on general market analysis.")
+                            st.info("No learned patterns match current market conditions.")
                 else:
                     st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
             
