@@ -1028,7 +1028,10 @@ Provide:
                 
                 # Display learned patterns from validated debates
                 st.markdown("**📚 Learned Patterns from Validated Debates**")
-                learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
+                try:
+                    learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
+                except TypeError:
+                    learned_patterns = debate_db.get_learned_patterns(limit=5)
                 
                 if learned_patterns:
                     # Create a dataframe for better visualization
