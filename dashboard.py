@@ -46,7 +46,7 @@ st.markdown(
         }
         
         /* Button text must be white on color backgrounds */
-        .stButton > button {
+        .stButton > button:enabled {
             color: white !important;
         }
 
