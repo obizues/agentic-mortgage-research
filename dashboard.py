@@ -572,6 +572,7 @@ if round_1_positions:
                                     mark_llm_action_success(requires_llm=True)
                                     agent.save_debate_to_database(debate_db)
                                     st.session_state.debate_in_progress = False
+                                    st.session_state.selected_round = 2  # Auto-advance to Round 2 to show cross-examination
                                     st.rerun()
                                 else:
                                     st.error("❌ Debate did not complete properly. Check agent logs below.")
@@ -591,6 +592,56 @@ if round_1_positions:
                     st.rerun()
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
+    
+    # ===== CONSENSUS SUMMARY AT TOP (when debate complete) =====
+    if debate_complete:
+        st.divider()
+        debate_results = agent.knowledge["debate_results"]
+        final_stance = debate_results.get("majority_vote", "NEUTRAL")
+        consensus_score = debate_results.get("consensus_score", 0)
+        avg_confidence = debate_results.get("avg_confidence", 0)
+        vote_breakdown = debate_results.get("vote_breakdown", {})
+        vote_order = ["BULLISH", "BEARISH", "NEUTRAL"]
+        vote_parts = [
+            f"{vote_breakdown[stance]} {stance.title()}"
+            for stance in vote_order
+            if stance in vote_breakdown
+        ]
+        vote_summary = ", ".join(vote_parts) if vote_parts else "No votes recorded"
+        
+        # Determine background gradient and call to action based on stance
+        if "BULLISH" in final_stance:
+            bg_gradient = "linear-gradient(135deg, #00c48c 0%, #0a74da 100%)"
+            stance_emoji = "🟢"
+            action_text = "**What this means:** Market conditions favor homebuyers. Rates are expected to be favorable—consider moving forward with mortgage decisions."
+        elif "BEARISH" in final_stance:
+            bg_gradient = "linear-gradient(135deg, #e53e3e 0%, #ff6b6b 100%)"
+            stance_emoji = "🔴"
+            action_text = "**What this means:** Market conditions suggest caution. Rates may be less favorable—consider waiting or exploring alternatives."
+        else:  # NEUTRAL
+            bg_gradient = "linear-gradient(135deg, #ffa500 0%, #ffcc00 100%)"
+            stance_emoji = "🟡"
+            action_text = "**What this means:** Market signals are mixed. No strong direction—evaluate your personal circumstances carefully."
+        
+        st.markdown(
+            f"""<div style='padding: 20px; background: {bg_gradient}; 
+            color: white; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);'>
+            <h2 style='margin: 0;'>{stance_emoji} Final Consensus: {final_stance}</h2>
+            <p style='margin-top: 8px; font-size: 1rem; opacity: 0.95;'>
+            Votes: {vote_summary} | Consensus Strength: {consensus_score:.0f}% | Avg Confidence: {avg_confidence:.0f}%
+            </p>
+            </div>""",
+            unsafe_allow_html=True
+        )
+        
+        # Add explanation box below
+        st.info(
+            f"{action_text}\n\n"
+            f"**How agents voted:** {vote_summary} — A 2–1 split means mixed signals; 3–0 means strong agreement.\n\n"
+            f"**Consensus Strength:** {consensus_score:.0f}% — Percent of agents aligned on the majority view.\n\n"
+            f"**Average Confidence:** {avg_confidence:.0f}% — Average certainty level across all agents. Higher = stronger agreement."
+        )
+        st.divider()
     
     # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
     col_btn1, col_btn2, col_btn3 = st.columns(3)
@@ -666,55 +717,6 @@ if round_1_positions:
                     )
                 else:
                     st.info("Round 3 not yet available.")
-    
-    # ===== SECTION 4: FINAL RECOMMENDATION (appears at bottom if debate complete) =====
-    if debate_complete:
-        st.divider()
-        debate_results = agent.knowledge["debate_results"]
-        final_stance = debate_results.get("majority_vote", "NEUTRAL")
-        consensus_score = debate_results.get("consensus_score", 0)
-        avg_confidence = debate_results.get("avg_confidence", 0)
-        vote_breakdown = debate_results.get("vote_breakdown", {})
-        vote_order = ["BULLISH", "BEARISH", "NEUTRAL"]
-        vote_parts = [
-            f"{vote_breakdown[stance]} {stance.title()}"
-            for stance in vote_order
-            if stance in vote_breakdown
-        ]
-        vote_summary = ", ".join(vote_parts) if vote_parts else "No votes recorded"
-        
-        # Determine background gradient and call to action based on stance
-        if "BULLISH" in final_stance:
-            bg_gradient = "linear-gradient(135deg, #00c48c 0%, #0a74da 100%)"
-            stance_emoji = "🟢"
-            action_text = "**What this means:** Market conditions favor homebuyers. Rates are expected to be favorable—consider moving forward with mortgage decisions."
-        elif "BEARISH" in final_stance:
-            bg_gradient = "linear-gradient(135deg, #e53e3e 0%, #ff6b6b 100%)"
-            stance_emoji = "🔴"
-            action_text = "**What this means:** Market conditions suggest caution. Rates may be less favorable—consider waiting or exploring alternatives."
-        else:  # NEUTRAL
-            bg_gradient = "linear-gradient(135deg, #ffa500 0%, #ffcc00 100%)"
-            stance_emoji = "🟡"
-            action_text = "**What this means:** Market signals are mixed. No strong direction—evaluate your personal circumstances carefully."
-        
-        st.markdown(
-            f"""<div style='padding: 20px; background: {bg_gradient}; 
-            color: white; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);'>
-            <h2 style='margin: 0;'>{stance_emoji} Final Consensus: {final_stance}</h2>
-            <p style='margin-top: 8px; font-size: 1rem; opacity: 0.95;'>
-            Votes: {vote_summary} | Consensus Strength: {consensus_score:.0f}% | Avg Confidence: {avg_confidence:.0f}%
-            </p>
-            </div>""",
-            unsafe_allow_html=True
-        )
-        
-        # Add explanation box below
-        st.info(
-            f"{action_text}\n\n"
-            f"**How agents voted:** {vote_summary} — A 2–1 split means mixed signals; 3–0 means strong agreement.\n\n"
-            f"**Consensus Strength:** {consensus_score:.0f}% — Percent of agents aligned on the majority view.\n\n"
-            f"**Average Confidence:** {avg_confidence:.0f}% — Average certainty level across all agents. Higher = stronger agreement."
-        )
 
 elif not round_1_positions:
     st.info("Run Agentic Plan to generate initial agent positions and start the debate.")
