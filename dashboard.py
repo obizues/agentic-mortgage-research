@@ -745,6 +745,11 @@ if round_1_positions:
     
     # ===== CONSENSUS SUMMARY AT TOP (when debate complete) =====
     if debate_complete:
+        # TEMP DEBUG: Show raw vote data for troubleshooting
+        st.expander("🛠️ Debug: Raw Vote Data").write({
+            "debate_round_3": agent.knowledge.get("debate_round_3", {}),
+            "debate_results": agent.knowledge.get("debate_results", {})
+        })
         st.divider()
         debate_results = agent.knowledge["debate_results"]
         final_stance = debate_results.get("majority_vote", "NEUTRAL")
