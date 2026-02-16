@@ -876,34 +876,62 @@ Provide:
                 col3.metric("Avg Accuracy", f"{val_stats['avg_accuracy']:.1f}%")
                 
                 # Accuracy trend chart
-                st.markdown("**📈 Prediction Accuracy Over Time**")
+                st.markdown("**📈 Prediction History & Learning**")
                 trend_data = debate_db.get_accuracy_trend()
                 if trend_data:
                     import pandas as pd
                     df_trend = pd.DataFrame(trend_data)
                     
-                    # Create line chart showing accuracy trend
-                    chart = alt.Chart(df_trend).mark_line(point=True, color='#0a74da').encode(
-                        x=alt.X('debate_num:Q', title='Debate Number', axis=alt.Axis(format='d')),
-                        y=alt.Y('accuracy:Q', title='Accuracy (%)', scale=alt.Scale(domain=[0, 100])),
-                        tooltip=[
-                            alt.Tooltip('debate_num:Q', title='Debate #'),
-                            alt.Tooltip('accuracy:Q', title='Accuracy', format='.1f'),
-                            alt.Tooltip('status:N', title='Status'),
-                            alt.Tooltip('recommendation:N', title='Prediction')
-                        ]
-                    ).properties(
-                        height=250,
-                        title='Multi-Agent System Learning: Accuracy improves as more predictions are validated'
-                    )
+                    # Create line chart showing all predictions with validation status
+                    # Validated debates show actual accuracy, pending ones show baseline (50%)
+                    validated = df_trend[df_trend['status'] != 'pending']
+                    pending = df_trend[df_trend['status'] == 'pending']
                     
-                    # Add reference line at 50% (baseline)
+                    # Validated line (solid)
+                    if not validated.empty:
+                        chart_validated = alt.Chart(validated).mark_line(point=True, color='#0a74da', size=3).encode(
+                            x=alt.X('debate_num:Q', title='Debate Number'),
+                            y=alt.Y('accuracy:Q', title='Accuracy (%)', scale=alt.Scale(domain=[0, 100])),
+                            tooltip=[
+                                alt.Tooltip('debate_num:Q', title='Debate #'),
+                                alt.Tooltip('accuracy:Q', title='Accuracy', format='.1f'),
+                                alt.Tooltip('status:N', title='Status'),
+                                alt.Tooltip('recommendation:N', title='Prediction')
+                            ]
+                        ).properties(title='Validated: Actual accuracy | Pending: Under review')
+                    else:
+                        chart_validated = alt.Chart(pd.DataFrame()).mark_line()
+                    
+                    # Pending points (lighter, dashed line implied)
+                    if not pending.empty:
+                        chart_pending = alt.Chart(pending).mark_point(color='#ccc', size=60, opacity=0.5).encode(
+                            x=alt.X('debate_num:Q', title='Debate Number'),
+                            y=alt.Y('accuracy:Q', title='Accuracy (%)'),
+                            tooltip=[
+                                alt.Tooltip('debate_num:Q', title='Debate #'),
+                                alt.Tooltip('recommendation:N', title='Prediction'),
+                                alt.Tooltip('status:N', title='Status (awaiting validation)')
+                            ]
+                        )
+                    else:
+                        chart_pending = alt.Chart(pd.DataFrame()).mark_point()
+                    
+                    # Baseline at 50%
                     baseline = alt.Chart(pd.DataFrame({'y': [50]})).mark_rule(color='gray', strokeDash=[3, 3]).encode(
                         y='y:Q'
                     )
                     
-                    st.altair_chart(chart + baseline, width="stretch")
-                    st.caption("💡 **Tip**: Each point represents a validated debate. Higher accuracy = better predictions.")
+                    chart = chart_validated + chart_pending + baseline
+                    st.altair_chart(chart.properties(height=250), width="stretch")
+                    
+                    validated_count = len(validated)
+                    pending_count = len(pending)
+                    st.caption(
+                        f"💡 **Status**: {validated_count} validated debate{'s' if validated_count != 1 else ''} | "
+                        f"{pending_count} pending validation. Blue line = actual accuracy | Gray points = awaiting validation."
+                    )
+                else:
+                    st.info("No debates yet. Run Agentic Plan and Start Debate to begin tracking predictions.")
                 
                 st.divider()
             
