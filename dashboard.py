@@ -49,6 +49,17 @@ st.markdown(
         .stButton > button {
             color: white !important;
         }
+
+        /* Make disabled buttons visibly greyed out */
+        .stButton > button:disabled,
+        .stButton > button[disabled] {
+            background: #d1d5db !important;
+            color: #6b7280 !important;
+            border: 1px solid #cbd5e1 !important;
+            opacity: 0.6 !important;
+            filter: grayscale(100%) !important;
+            cursor: not-allowed !important;
+        }
         
         /* Sidebar text must be dark */
         section[data-testid="stSidebar"] {
@@ -476,8 +487,16 @@ with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
                 # Auto-validate immediately using current rates
                 if debate_id:
                     try:
-                        if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
-                            current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
+                        current_rate = None
+                        rate_series = agent.knowledge.get("mortgage_rates")
+                        if rate_series is not None and len(rate_series) > 0:
+                            current_rate = float(rate_series.iloc[-1]['rate'])
+                        else:
+                            rate_insights = agent.knowledge.get("rate_insights", {})
+                            if rate_insights.get("latest_rate") is not None:
+                                current_rate = float(rate_insights.get("latest_rate"))
+
+                        if current_rate is not None:
                             validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
                             st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
                         else:
@@ -540,9 +559,17 @@ if should_auto_run:
     st.session_state.first_run = False
 
 # Auto-validate any pending debates (catch-all in case auto-validation missed any)
-if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
+current_rate = None
+rate_series = agent.knowledge.get("mortgage_rates")
+if rate_series is not None and len(rate_series) > 0:
+    current_rate = float(rate_series.iloc[-1]['rate'])
+else:
+    rate_insights = agent.knowledge.get("rate_insights", {})
+    if rate_insights.get("latest_rate") is not None:
+        current_rate = float(rate_insights.get("latest_rate"))
+
+if current_rate is not None:
     try:
-        current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
         recent_debates = debate_db.get_recent_debates(limit=50)
         pending = [d for d in recent_debates if d['validation_status'] is None]
         
@@ -555,7 +582,7 @@ if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]
                     except Exception as e:
                         st.write(f"✗ Debate #{debate['id']}: {str(e)}")
                 validation_status.update(label="✅ Auto-validation complete", state="complete", expanded=False)
-    except Exception as e:
+    except Exception:
         pass  # Silent fail - don't interrupt page load
 
 
@@ -591,6 +618,13 @@ with col_status4:
 # ---------- Agent Debate System ----------
 round_1_positions = agent.knowledge.get("debate_round_1", {})
 debate_complete = "debate_results" in agent.knowledge
+
+# If Round 1 exists but no results yet, clear stale Round 2/3 data.
+if round_1_positions and not debate_complete:
+    if "debate_round_2" in agent.knowledge:
+        del agent.knowledge["debate_round_2"]
+    if "debate_round_3" in agent.knowledge:
+        del agent.knowledge["debate_round_3"]
 
 # Show debate interface if Round 1 exists
 if round_1_positions:
@@ -666,8 +700,16 @@ if round_1_positions:
                                     # Auto-validate immediately using current rates
                                     if debate_id:
                                         try:
-                                            if "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
-                                                current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
+                                            current_rate = None
+                                            rate_series = agent.knowledge.get("mortgage_rates")
+                                            if rate_series is not None and len(rate_series) > 0:
+                                                current_rate = float(rate_series.iloc[-1]['rate'])
+                                            else:
+                                                rate_insights = agent.knowledge.get("rate_insights", {})
+                                                if rate_insights.get("latest_rate") is not None:
+                                                    current_rate = float(rate_insights.get("latest_rate"))
+
+                                            if current_rate is not None:
                                                 validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
                                                 st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
                                             else:
