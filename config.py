@@ -41,7 +41,7 @@ RUNNING_IN_CLOUD = (
     os.path.exists("/mount/src") or
     os.getenv("HOSTNAME", "").startswith("streamlit")
 )
-ALLOW_LLM_LOCAL = os.getenv("ALLOW_LLM_LOCAL", "0") == "1"
+ALLOW_LLM_LOCAL = os.getenv("ALLOW_LLM_LOCAL", "1") == "1"
 ENABLE_LLM_PLANNING = bool(ANTHROPIC_API_KEY) and (RUNNING_IN_CLOUD or ALLOW_LLM_LOCAL)
 
 # LLM usage limits (per session)

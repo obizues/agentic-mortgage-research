@@ -42,9 +42,9 @@ st.markdown(
             color: #0a74da !important;
         }
         
-        /* Button text must be white on color backgrounds */
+        /* Button text must be dark for readability */
         .stButton > button:enabled {
-            color: white !important;
+            color: #222 !important;
         }
 
         /* Make disabled buttons visibly greyed out */
@@ -518,7 +518,7 @@ with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
 
 # Run agentic plan on first load or if no debate data exists
 round_1_positions = agent.knowledge.get("debate_round_1", {})
-should_auto_run = st.session_state.first_run or not round_1_positions
+should_auto_run = st.session_state.first_run
 st.session_state.initializing = False
 
 if should_auto_run:
@@ -850,20 +850,42 @@ if round_1_positions:
     }
     st.markdown(f"#### {round_names[st.session_state.selected_round]}")
     
+
+
     col1, col2, col3 = st.columns(3)
-    
+
     for col, agent_name in zip([col1, col2, col3], agent_names):
         with col:
             r1_data = round_1.get(agent_name, {})
             r2_data = round_2.get(agent_name, {})
             r3_data = round_3.get(agent_name, {})
             style = agent_styles[agent_name]
-            
+
             # Agent header
             st.markdown(f"##### {style['emoji']} {agent_name}")
-            
+
+
             if st.session_state.selected_round == 1:
-                st.markdown("**Initial Position**")
+                # Extract stance from explicit line if present
+                import re
+                pos_text = r1_data.get('position', '').upper()
+                stance_match = re.search(r'^\s*INITIAL POSITION:\s*(BULLISH|BEARISH|NEUTRAL)', pos_text, re.MULTILINE)
+                if stance_match:
+                    stance = stance_match.group(1)
+                    stance_emoji = {"BULLISH": "🟢", "BEARISH": "🔴", "NEUTRAL": "🟡"}.get(stance, "⚪")
+                elif "BULLISH" in pos_text:
+                    stance = "BULLISH"
+                    stance_emoji = "🟢"
+                elif "BEARISH" in pos_text:
+                    stance = "BEARISH"
+                    stance_emoji = "🔴"
+                elif "NEUTRAL" in pos_text:
+                    stance = "NEUTRAL"
+                    stance_emoji = "🟡"
+                else:
+                    stance = "N/A"
+                    stance_emoji = "⚪"
+                st.markdown(f"**Initial Position:** {stance_emoji} {stance.title()}")
                 st.caption(f"Confidence: {r1_data.get('confidence', 'N/A')}%")
                 st.markdown(
                     f"""<div style='padding: 12px; background: {style['bg']}; border-left: 4px solid {style['color']}; border-radius: 4px; min-height: 180px; font-size: 0.9rem;'>
@@ -871,7 +893,7 @@ if round_1_positions:
                     </div>""",
                     unsafe_allow_html=True
                 )
-                
+
             elif st.session_state.selected_round == 2:
                 st.markdown("**Cross-Examination**")
                 if r2_data.get('cross_examination'):
@@ -883,7 +905,7 @@ if round_1_positions:
                     )
                 else:
                     st.info("Round 2 not yet available.")
-                    
+
             elif st.session_state.selected_round == 3:
                 st.markdown("**Final Vote**")
                 if r3_data.get('stance'):
@@ -962,44 +984,21 @@ Provide:
     st.divider()
     with st.expander("📚 Historical Debates & System Learning", expanded=False):
         st.info("💡 **Value**: Learn from past debates using historical multi-agent system's predictions' accuracy.")
+        st.markdown(
+            "<div style='font-size:0.92em; color:#555; margin-bottom:0.5em;'>"
+            "Pattern accuracy influences up to 25% of the final score. Agent consensus drives the remaining 75%."
+            "</div>", unsafe_allow_html=True)
         # Get recent debates from database
         recent_debates = debate_db.get_recent_debates(limit=10)
 
 
         # ...existing code for validation stats, emerging patterns, etc...
 
-        # Move 'Show Individual Debates' expander to the bottom
-        if recent_debates:
-            with st.expander("Show Individual Debates", expanded=False):
-                for debate in recent_debates:
-                    with st.expander(
-                        f"Debate #{debate['id']} - {debate['timestamp'][:19]} - {debate['final_recommendation']}", 
-                        expanded=False
-                    ):
-                        col1, col2, col3 = st.columns(3)
-                        col1.metric("Consensus", f"{debate['consensus_score']:.0f}%")
-                        col2.metric("Cost", f"${debate['session_cost']:.4f}")
-                        if debate['validation_status']:
-                            status_emoji = "✅" if debate['validation_status'] == 'correct' else "❌"
-                            col3.metric(
-                                "Validation", 
-                                f"{status_emoji} {debate['validation_status'].title()}",
-                                delta=f"{debate['validation_accuracy']:.0f}% accurate" if debate['validation_accuracy'] else None
-                            )
-                        else:
-                            col3.metric("Validation", "Pending")
-                        if st.button(f"View Details", key=f"view_{debate['id']}"):
-                            debate_details = debate_db.get_debate_details(debate['id'])
-                            st.json(debate_details)
-        else:
-            st.info("No historical debates yet. Run your first debate to see results here!")
 
         # Validation stats and emerging patterns at the bottom
         val_stats = debate_db.get_validation_stats()
         if val_stats['total_validated'] > 0:
-            st.caption(
-                "**Emerging Patterns**"
-                )
+            st.markdown("**Emerging Patterns**")
             learned_patterns = None
             try:
                 learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
@@ -1011,36 +1010,40 @@ Provide:
                 for pattern in learned_patterns:
                     pattern_data.append({
                         "Prediction": pattern['pattern'],
-                        "Accuracy": float(pattern['accuracy']),
+                        "Accuracy": round(float(pattern['accuracy']), 2),
                         "Frequency": pattern['frequency'],
                         "Condition": pattern['condition']
                     })
                 df_patterns = pd.DataFrame(pattern_data)
                 st.dataframe(df_patterns, use_container_width=True, hide_index=True)
 
-                st.markdown(
-                    "Agents learn from past debates. When current market conditions match a learned pattern, agents use it to help guide their next recommendation. "
-                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence."
-                )
+
 
                 # Short agent recommendation preview with weighted logic
-                st.markdown("**Current Recommendation Basis**")
+                st.markdown("<b>Current Pattern:</b>", unsafe_allow_html=True)
                 if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
                     current_rate = agent.knowledge['mortgage_rates'].iloc[-1]['rate']
                     avg_rate = agent.knowledge['mortgage_rates']['rate'].mean()
                     current_condition = 'Market condition: rates decreasing' if current_rate < avg_rate else 'Market condition: rates increasing'
                     # Use exact match for prediction (no substring)
+
                     import re
                     def extract_pattern_signal(pred):
-                        pred = pred.strip().upper()
-                        if re.fullmatch(r"BULLISH", pred):
-                            return 1
-                        elif re.fullmatch(r"BEARISH", pred):
-                            return -1
-                        elif re.fullmatch(r"NEUTRAL", pred):
-                            return 0
+                        raw_pred = str(pred)
+                        # Normalize: uppercase, strip, remove non-alpha
+                        norm_pred = re.sub(r'[^A-Z]', '', raw_pred.strip().upper())
+                        debug_pred = {
+                            'raw': raw_pred,
+                            'normalized': norm_pred
+                        }
+                        if norm_pred.startswith("BULLISH"):
+                            return 1, debug_pred
+                        elif norm_pred.startswith("BEARISH"):
+                            return -1, debug_pred
+                        elif norm_pred.startswith("NEUTRAL"):
+                            return 0, debug_pred
                         else:
-                            return None
+                            return None, debug_pred
 
                     matched_patterns = df_patterns[df_patterns['Condition'] == current_condition]
                     debug_info = {
@@ -1055,48 +1058,103 @@ Provide:
                         best_pattern = matched_patterns.loc[idx]
                         if isinstance(best_pattern, pd.DataFrame):
                             best_pattern = best_pattern.iloc[0]
+
+                        # Calculate pattern weight (wp) and agent research weight (wa)
                         accuracy = float(best_pattern['Accuracy']) if not isinstance(best_pattern['Accuracy'], pd.Series) else float(best_pattern['Accuracy'].iloc[0])
                         accuracy = accuracy / 100.0
-                        accuracy = float(best_pattern['Accuracy']) / 100.0
-                        wp = accuracy * 0.25
-                        wm = 1 - wp
-                        market_signal = 1 if current_condition == 'Market condition: rates decreasing' else -1
-                        pred = best_pattern['Prediction'].strip().upper()
-                        pattern_signal = extract_pattern_signal(pred)
+                        wp = accuracy * 0.25  # up to 0.25
+                        wa = 0.75  # agent research weight
+
+                        # Get agent consensus from round 3
+                        consensus_score = None
+                        consensus_signal = None
+                        if 'debate_round_3' in agent.knowledge:
+                            votes = agent.knowledge['debate_round_3']
+                            # Count BULLISH, BEARISH, NEUTRAL
+                            from collections import Counter
+                            stance_counts = Counter()
+                            for v in votes.values():
+                                import re
+                                vote_text = v.get('vote_text')
+                                if vote_text:
+                                    match = re.search(r'VOTE:\s*(BULLISH|BEARISH|NEUTRAL)', vote_text, re.IGNORECASE)
+                                    if match:
+                                        stance = match.group(1).upper()
+                                        stance_counts[stance] += 1
+                            total_votes = sum(stance_counts.values())
+                            if total_votes > 0:
+                                # Assign signal: BULLISH=1, BEARISH=-1, NEUTRAL=0
+                                bullish = stance_counts['BULLISH']
+                                bearish = stance_counts['BEARISH']
+                                neutral = stance_counts['NEUTRAL']
+                                consensus_signal = (bullish - bearish) / total_votes
+                                consensus_score = consensus_signal
+                        else:
+                            consensus_score = 0
+                            consensus_signal = 0
+
+                        # Pattern signal
+                        pred = best_pattern['Prediction']
+                        pattern_signal, pred_debug = extract_pattern_signal(pred)
                         debug_info.update({
                             'best_pattern': best_pattern.to_dict(),
                             'accuracy': accuracy,
                             'wp': wp,
-                            'wm': wm,
-                            'market_signal': market_signal,
-                            'pattern_signal': pattern_signal
+                            'wa': wa,
+                            'consensus_signal': consensus_signal,
+                            'pattern_signal': pattern_signal,
+                            'pattern_prediction_debug': pred_debug
                         })
                         if pattern_signal is None:
-                            st.warning(f"Pattern prediction '{best_pattern['Prediction']}' is not recognized as BULLISH, BEARISH, or NEUTRAL.")
-                        final_score = wm * market_signal + wp * (pattern_signal if pattern_signal is not None else 0)
+                            st.warning(f"Pattern prediction '{best_pattern['Prediction']}' is not recognized as BULLISH, BEARISH, or NEUTRAL. (Normalized: {pred_debug['normalized']})")
+
+                        # Final score: 75% agent consensus + 25% pattern signal (weighted by accuracy)
+                        if consensus_signal is None:
+                            consensus_signal = 0
+                        final_score = wa * consensus_signal + wp * (pattern_signal if pattern_signal is not None else 0)
                         if final_score > 0.1:
                             rec = 'BULLISH'
                         elif final_score < -0.1:
                             rec = 'BEARISH'
                         else:
                             rec = 'NEUTRAL'
-                        st.write(f"Pattern: {best_pattern['Prediction']} | Accuracy: {best_pattern['Accuracy']}% | Used for: {best_pattern['Condition']}")
-                        st.write(f"**Weighted Recommendation:** {rec}  ")
-                        st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, market signal = {market_signal}, pattern signal = {pattern_signal}, Final Score = {final_score:.2f}")
-                        st.write(f"**Formula:**"
-                                "$w_p = \\text{{accuracy}} \\times 0.25$ (pattern weight, max 0.25)  \n"
-                                "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
-                                "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
-                        )
-                        with st.expander("🛠️ Debug: Pattern Recommendation Logic", expanded=False):
-                            st.json(debug_info)
-                    else:
-                        st.info("No learned patterns match current market conditions.")
-                        with st.expander("🛠️ Debug: Pattern Recommendation Logic", expanded=False):
-                            st.json(debug_info)
+                        st.write(f"{best_pattern['Prediction']} | Accuracy: {round(float(best_pattern['Accuracy']), 2)}% | Used for: {best_pattern['Condition']}")
+                        st.write(f"**Weighted Recommendation:** {rec}")
+                        st.write("**Formula Breakdown:**")
+                        st.latex(r"w_p = \text{(pattern accuracy)} \times 0.25")
+                        st.markdown("<div style='text-align:center; font-size:0.95em; color:#888;'>Pattern weight (max 0.25)</div>", unsafe_allow_html=True)
+                        st.latex(r"w_a = 0.75")
+                        st.markdown("<div style='text-align:center; font-size:0.95em; color:#888;'>Agent research weight</div>", unsafe_allow_html=True)
+                        st.latex(r"\text{Final Score} = w_a \times \text{(agent consensus)} + w_p \times \text{(pattern signal)}")
+                        
+                        # Move the individual debates expander to the bottom
+                        if recent_debates:
+                            with st.expander("Show Individual Debates", expanded=False):
+                                for debate in recent_debates:
+                                    with st.expander(
+                                        f"Debate #{debate['id']} - {debate['timestamp'][:19]} - {debate['final_recommendation']}", 
+                                        expanded=False
+                                    ):
+                                        col1, col2, col3 = st.columns(3)
+                                        col1.metric("Consensus", f"{debate['consensus_score']:.0f}%")
+                                        col2.metric("Cost", f"${debate['session_cost']:.4f}")
+                                        if debate['validation_status']:
+                                            status_emoji = "✅" if debate['validation_status'] == 'correct' else "❌"
+                                            col3.metric(
+                                                "Validation", 
+                                                f"{status_emoji} {debate['validation_status'].title()}",
+                                                delta=f"{debate['validation_accuracy']:.0f}% accurate" if debate['validation_accuracy'] else None
+                                            )
+                                        else:
+                                            col3.metric("Validation", "Pending")
+                                        if st.button(f"View Details", key=f"view_{debate['id']}"):
+                                            debate_details = debate_db.get_debate_details(debate['id'])
+                                            st.json(debate_details)
+                else:
+                    st.info("No historical debates yet. Run your first debate to see results here!")
             else:
                 st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
-
+            
 else:
     # Helpful message when debate data isn't loaded (e.g., after app redeploy)
     if st.session_state.first_run and not st.session_state.get('plan_generated', False):

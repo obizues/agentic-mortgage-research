@@ -649,8 +649,8 @@ Provide 2-3 concise bullet points for your perspective."""
         
         for role_name, role_config in roles.items():
             self.log(f"{role_config['emoji']} {role_name}: Formulating initial position...")
-            
-            prompt = f"""{role_config['prompt']}{learned_patterns}
+            try:
+                prompt = f"""{role_config['prompt']}{learned_patterns}
 
 Market Context:
 - Current 30-year mortgage rate: {rate_insights.get('latest_rate', 'N/A')}%
@@ -659,31 +659,68 @@ Market Context:
 - Housing market: {comparison}
 - Overall summary: {summary}
 
-Task: Provide your initial market position in 3-4 bullet points. Be specific about whether you lean BULLISH (rates will fall), BEARISH (rates will rise/stay high), or NEUTRAL. Include your confidence level (0-100%)."""
+Task:
+1. At the very top, write a single line in the format: Initial Position: [BULLISH/BEARISH/NEUTRAL] (required)
+2. Then, provide your initial market position in 3-4 bullet points. Be specific about why you lean BULLISH (rates will fall), BEARISH (rates will rise/stay high), or NEUTRAL. Include your confidence level (0-100%).
+"""
 
-            message = self.llm_client.messages.create(
-                model=config.MODEL_NAME,
-                max_tokens=300,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            self.session_cost += 0.003
-            
-            position_text = message.content[0].text.strip()
-            
-            # Extract confidence if mentioned (simple parsing)
-            confidence = 70.0  # default
-            if "confidence" in position_text.lower():
+                message = self.llm_client.messages.create(
+                    model=config.MODEL_NAME,
+                    max_tokens=300,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                self.session_cost += 0.003
+                position_text = message.content[0].text.strip()
+
+                # Improved stance extraction: find all 'Initial Position' lines and use the first valid stance
                 import re
-                conf_match = re.search(r'(\d+)%?\s*confidence', position_text.lower())
-                if conf_match:
-                    confidence = float(conf_match.group(1))
-            
-            debate_positions[role_name] = {
-                "round": 1,
-                "position": position_text,
-                "confidence": confidence,
-                "emoji": role_config['emoji']
-            }
+                stance = "NEUTRAL"
+                confidence = 70.0  # default
+                stance_matches = re.findall(r'Initial Position[:\-]?\s*(BULLISH|BEARISH|NEUTRAL)', position_text, re.IGNORECASE)
+                if stance_matches:
+                    stance_val = stance_matches[0].strip().upper()
+                    if "BULLISH" in stance_val:
+                        stance = "BULLISH"
+                    elif "BEARISH" in stance_val:
+                        stance = "BEARISH"
+                    elif "NEUTRAL" in stance_val:
+                        stance = "NEUTRAL"
+                else:
+                    # Fallback: search for stance anywhere
+                    if "BULLISH" in position_text.upper():
+                        stance = "BULLISH"
+                    elif "BEARISH" in position_text.upper():
+                        stance = "BEARISH"
+                    elif "NEUTRAL" in position_text.upper():
+                        stance = "NEUTRAL"
+
+                # Improved confidence extraction: find all confidence values (including parenthetical and inline)
+                conf_matches = re.findall(r'(\d+(?:\.\d+)?)%\s*confidence|confidence:?\s*(\d+(?:\.\d+)?)%|confidence level:?\s*(\d+(?:\.\d+)?)%|confidence level of (\d+(?:\.\d+)?)%|\((\d+(?:\.\d+)?)%\)', position_text, re.IGNORECASE)
+                # Flatten and filter out empty matches
+                conf_values = [float(val) for group in conf_matches for val in group if val]
+                if conf_values:
+                    confidence = min(conf_values)  # Use the lowest confidence value found
+
+                # Log for debugging
+                self.log(f"DEBUG: Round 1 position_text = {position_text}")
+                self.log(f"DEBUG: Extracted stance = {stance}, confidence = {confidence}")
+
+                debate_positions[role_name] = {
+                    "round": 1,
+                    "position": position_text,
+                    "stance": stance,
+                    "confidence": confidence,
+                    "emoji": role_config['emoji']
+                }
+            except Exception as e:
+                self.log(f"❌ ERROR generating initial position for {role_name}: {e}")
+                debate_positions[role_name] = {
+                    "round": 1,
+                    "position": f"ERROR: {e}",
+                    "stance": "NEUTRAL",
+                    "confidence": 0.0,
+                    "emoji": role_config['emoji']
+                }
         
         self.knowledge["debate_round_1"] = debate_positions
         self.log("✓ Round 1 complete: All initial positions recorded")
@@ -810,13 +847,18 @@ REASONING: [your justification]"""
             confidence = 50.0
             import re
             # Robust regex: match 'VOTE' with or without colon, allow markdown, whitespace, etc.
-            vote_match = re.search(r'^\s*VOTE[:\-]?\s*([A-Z]+)', vote_text, re.MULTILINE | re.IGNORECASE)
+            vote_match = re.search(r'^\s*VOTE[:\-]?\s*([A-Z\s]+)', vote_text, re.MULTILINE | re.IGNORECASE)
             self.log(f"DEBUG: vote_text = {vote_text}")
             if vote_match:
-                vote_val = vote_match.group(1).upper()
+                vote_val = vote_match.group(1).strip().upper()
                 self.log(f"DEBUG: vote_match group = {vote_val}")
-                if vote_val in ["BULLISH", "BEARISH", "NEUTRAL"]:
-                    stance = vote_val
+                # Accept stances containing BULLISH, BEARISH, or NEUTRAL anywhere
+                if "BULLISH" in vote_val:
+                    stance = "BULLISH"
+                elif "BEARISH" in vote_val:
+                    stance = "BEARISH"
+                elif "NEUTRAL" in vote_val:
+                    stance = "NEUTRAL"
             conf_match = re.search(r'CONFIDENCE:\s*(\d+)', vote_text, re.IGNORECASE)
             if conf_match:
                 confidence = float(conf_match.group(1))
