@@ -127,7 +127,7 @@ st.markdown(
 st.markdown(
     """
     <div class="fintech-footer">
-        Built by <b>Chris Obermeier</b> | Head of Engineering | SVP Engineering | AI Leader
+        Built by <b>Chris Obermeier</b> | VP Engineering | Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation | Scaling High-Performance Teams
         <p>
         <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | 
         <a href="https://github.com/obizues" target="_blank">GitHub</a> | 
