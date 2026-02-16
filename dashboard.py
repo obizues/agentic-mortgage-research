@@ -256,12 +256,22 @@ with st.sidebar.expander("System Design Notes", expanded=False):
 
 # Initialize LLM client if API key is available
 llm_client = None
+llm_init_error = None
 if config.ENABLE_LLM_PLANNING:
     try:
         from anthropic import Anthropic
-        llm_client = Anthropic(api_key=config.ANTHROPIC_API_KEY)
+        api_key = config.ANTHROPIC_API_KEY
+        if not api_key:
+            llm_init_error = "ANTHROPIC_API_KEY is not set"
+        else:
+            llm_client = Anthropic(api_key=api_key)
     except Exception as e:
-        st.warning(f"Could not initialize LLM: {e}. Using heuristic-based planning.")
+        llm_init_error = str(e)
+else:
+    llm_init_error = "LLM planning is disabled in config"
+
+if llm_init_error and not config.ENABLE_LLM_PLANNING:
+    st.warning(f"⚠️ {llm_init_error}. App will use cached data only.")
 
 # Reload agent code
 importlib.reload(AgenticMortgageResearchAgent)
@@ -497,6 +507,13 @@ if round_1_positions:
     # ===== MAIN DEBATE SECTION HEADER =====
     st.markdown("### 🎬 Multi-Agent Debate & Analysis")
     
+    # DEBUG: Show what's happening
+    with st.expander("🔧 Debug Status", expanded=False):
+        st.write(f"debate_complete: {debate_complete}")
+        st.write(f"round_1 exists: {bool(round_1)}")
+        st.write(f"agent.llm_client: {agent.llm_client is not None}")
+        st.write(f"LLM enabled: {config.ENABLE_LLM_PLANNING}")
+    
     # ===== SECTION 1: CONTINUE TO DEBATE PROMPT (at top, only on Round 1 if not complete) =====
     if not debate_complete and round_1:
         st.info(
@@ -511,20 +528,27 @@ if round_1_positions:
         with col_btn2:
             # Simple button - click triggers immediate execution check
             if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
+                st.write("DEBUG: Button clicked!")
+                
                 # First verify LLM client is available
-                if agent.llm_client is None:
-                    st.error("❌ LLM client not available. Cannot run debate. Check your Anthropic API key.")
+                if llm_client is None:
+                    st.error(f"❌ LLM not available: {llm_init_error}")
+                elif agent.llm_client is None:
+                    st.error("❌ Agent LLM client is None. This shouldn't happen – please refresh the page.")
                 else:
+                    st.write("DEBUG: LLM client OK, checking cooldown...")
                     # Check cooldown when clicked
                     can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
                     if error_msg:
-                        # Show error inline - DON'T rerun (prevents duplicate button appearance)
+                        st.write(f"DEBUG: Cooldown check: {error_msg}")
                         st.warning(error_msg)
                     else:
+                        st.write("DEBUG: Cooldown OK, running debate...")
                         # Run the debate
                         try:
                             with st.spinner("🎯 Running cross-examination and consensus rounds..."):
                                 result = agent.continue_debate(force=True)
+                                st.write(f"DEBUG: Debate result: {result}")
                                 
                                 # Verify debate actually completed
                                 if "debate_results" in agent.knowledge:
@@ -536,6 +560,8 @@ if round_1_positions:
                                     st.error("❌ Debate did not complete properly. Check agent logs below.")
                         except Exception as e:
                             st.error(f"❌ Error running debate: {e}")
+                            import traceback
+                            st.write(traceback.format_exc())
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
