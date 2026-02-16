@@ -1003,10 +1003,7 @@ Provide:
 
                 st.markdown(
                     "Agents learn from past debates. When current market conditions match a learned pattern, agents use it to help guide their next recommendation. "
-                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence. The formula is:  "
-                    "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  "
-                    "$w_m = 1 - w_p$ (market weight, always at least 0.75)  "
-                    "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
+                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence."
                 )
 
                 # Short agent recommendation preview with weighted logic
