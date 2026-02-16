@@ -963,78 +963,80 @@ Provide:
             if val_stats['total_validated'] > 0:
                 col1, col2, col3 = st.columns(3)
                 col1.metric("Total Validated", val_stats['total_validated'])
-                col2.metric("Correct Rate", f"{val_stats['accuracy_rate']}%")
-                col3.metric("Avg Accuracy", f"{val_stats['avg_accuracy']:.1f}%")
+                col2.metric("Direction Correct", f"{val_stats['accuracy_rate']}%")
+                col3.metric("Mortgage Rate Move (Avg %)", f"{val_stats['avg_accuracy']:.1f}%")
 
                 st.caption(
-                    "Correct Rate = % of debates marked correct. Avg Accuracy = magnitude of market move when correct."
+                    "Direction Correct = % of debates where the rate moved the predicted way. "
+                    "Mortgage Rate Move = average percent change in the 30-year rate from debate date to validation date."
                 )
                 
-                # Accuracy trend chart
+                # Accuracy trend charts
                 st.markdown("**📈 Prediction History & Learning**")
                 trend_data = debate_db.get_accuracy_trend()
                 if trend_data:
                     import pandas as pd
                     df_trend = pd.DataFrame(trend_data)
-                    
-                    # Create line chart showing all predictions with validation status
-                    # Validated debates show actual accuracy, pending ones show baseline (50%)
+
+                    # Derive clearer metrics for display
+                    df_trend['direction_correct'] = df_trend['status'].map({
+                        'correct': 100,
+                        'incorrect': 0
+                    })
+                    df_trend.loc[df_trend['status'] == 'pending', 'accuracy'] = None
+
                     validated = df_trend[df_trend['status'] != 'pending']
                     pending = df_trend[df_trend['status'] == 'pending']
-                    
+
                     # Use integer ticks for debate numbers
                     tick_values = sorted(df_trend['debate_num'].unique().tolist())
 
-                    # Validated line (solid)
+                    # Chart 1: Direction correctness (hit/miss)
                     if not validated.empty:
-                        chart_validated = alt.Chart(validated).mark_line(point=True, color='#0a74da', size=3).encode(
+                        chart_direction = alt.Chart(validated).mark_line(point=True, color='#0a74da', size=3).encode(
                             x=alt.X(
                                 'debate_num:Q',
                                 title='Debate Number',
                                 axis=alt.Axis(format='d', values=tick_values)
                             ),
-                            y=alt.Y('accuracy:Q', title='Accuracy (%)', scale=alt.Scale(domain=[0, 100])),
+                            y=alt.Y('direction_correct:Q', title='Direction Correct (%)', scale=alt.Scale(domain=[0, 100])),
                             tooltip=[
                                 alt.Tooltip('debate_num:Q', title='Debate #'),
-                                alt.Tooltip('accuracy:Q', title='Accuracy', format='.1f'),
+                                alt.Tooltip('direction_correct:Q', title='Direction Correct', format='.0f'),
                                 alt.Tooltip('status:N', title='Status'),
                                 alt.Tooltip('recommendation:N', title='Prediction')
                             ]
-                        ).properties(title='Validated: Actual accuracy | Pending: Under review')
+                        ).properties(title='Direction Correctness (Validated Only)')
                     else:
-                        chart_validated = alt.Chart(pd.DataFrame()).mark_line()
-                    
-                    # Pending points (lighter, dashed line implied)
-                    if not pending.empty:
-                        chart_pending = alt.Chart(pending).mark_point(color='#ccc', size=60, opacity=0.5).encode(
+                        chart_direction = alt.Chart(pd.DataFrame()).mark_line()
+
+                    # Chart 2: Mortgage rate move size
+                    if not validated.empty:
+                        chart_move = alt.Chart(validated).mark_line(point=True, color='#00c48c', size=3).encode(
                             x=alt.X(
                                 'debate_num:Q',
                                 title='Debate Number',
                                 axis=alt.Axis(format='d', values=tick_values)
                             ),
-                            y=alt.Y('accuracy:Q', title='Accuracy (%)'),
+                            y=alt.Y('accuracy:Q', title='Mortgage Rate Move (%)', scale=alt.Scale(domain=[0, 100])),
                             tooltip=[
                                 alt.Tooltip('debate_num:Q', title='Debate #'),
-                                alt.Tooltip('recommendation:N', title='Prediction'),
-                                alt.Tooltip('status:N', title='Status (awaiting validation)')
+                                alt.Tooltip('accuracy:Q', title='Move Size', format='.1f'),
+                                alt.Tooltip('status:N', title='Status'),
+                                alt.Tooltip('recommendation:N', title='Prediction')
                             ]
-                        )
+                        ).properties(title='Mortgage Rate Move Size (Validated Only)')
                     else:
-                        chart_pending = alt.Chart(pd.DataFrame()).mark_point()
-                    
-                    # Baseline at 50%
-                    baseline = alt.Chart(pd.DataFrame({'y': [50]})).mark_rule(color='gray', strokeDash=[3, 3]).encode(
-                        y='y:Q'
-                    )
-                    
-                    chart = chart_validated + chart_pending + baseline
-                    st.altair_chart(chart.properties(height=250), width="stretch")
-                    
+                        chart_move = alt.Chart(pd.DataFrame()).mark_line()
+
+                    st.altair_chart(chart_direction.properties(height=220), width="stretch")
+                    st.altair_chart(chart_move.properties(height=220), width="stretch")
+
                     validated_count = len(validated)
                     pending_count = len(pending)
                     st.caption(
                         f"💡 **Status**: {validated_count} validated debate{'s' if validated_count != 1 else ''} | "
-                        f"{pending_count} pending validation. Blue line = actual accuracy | Gray points = awaiting validation."
+                        f"{pending_count} pending validation. Charts show validated-only metrics for clarity."
                     )
                 else:
                     st.info("No debates yet. Run Agentic Plan and Start Debate to begin tracking predictions.")
