@@ -609,24 +609,37 @@ if round_1_positions:
         ]
         vote_summary = ", ".join(vote_parts) if vote_parts else "No votes recorded"
         
-        # Determine background gradient and call to action based on stance
-        if "BULLISH" in final_stance:
+        # Check if this is a true consensus (2+ agents agree) or a complete disagreement (1-1-1 tie)
+        is_no_consensus = consensus_score <= 33.5  # True tie: 1 vote vs 1 vs 1
+        is_weak_consensus = 33.5 < consensus_score < 66.5  # Weak: 2-1 split
+        is_strong_consensus = consensus_score >= 66.5  # Strong: 3-0 unanimous
+        
+        if is_no_consensus:
+            # Complete disagreement: special styling
+            bg_gradient = "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)"
+            stance_emoji = "⚪"
+            heading = "Agents Fundamentally Disagree"
+            action_text = "**What this means:** The agents could not reach agreement. Each took a different stance on the market—this reflects genuine uncertainty in the mortgage market signals. Your decision should prioritize your personal circumstances and risk tolerance."
+        elif "BULLISH" in final_stance:
             bg_gradient = "linear-gradient(135deg, #00c48c 0%, #0a74da 100%)"
             stance_emoji = "🟢"
+            heading = "Final Consensus: BULLISH"
             action_text = "**What this means:** Market conditions favor homebuyers. Rates are expected to be favorable—consider moving forward with mortgage decisions."
         elif "BEARISH" in final_stance:
             bg_gradient = "linear-gradient(135deg, #e53e3e 0%, #ff6b6b 100%)"
             stance_emoji = "🔴"
+            heading = "Final Consensus: BEARISH"
             action_text = "**What this means:** Market conditions suggest caution. Rates may be less favorable—consider waiting or exploring alternatives."
         else:  # NEUTRAL
             bg_gradient = "linear-gradient(135deg, #ffa500 0%, #ffcc00 100%)"
             stance_emoji = "🟡"
+            heading = "Final Consensus: NEUTRAL"
             action_text = "**What this means:** Market signals are mixed. No strong direction—evaluate your personal circumstances carefully."
         
         st.markdown(
             f"""<div style='padding: 20px; background: {bg_gradient}; 
             color: white; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);'>
-            <h2 style='margin: 0;'>{stance_emoji} Final Consensus: {final_stance}</h2>
+            <h2 style='margin: 0;'>{stance_emoji} {heading}</h2>
             <p style='margin-top: 8px; font-size: 1rem; opacity: 0.95;'>
             Votes: {vote_summary} | Consensus Strength: {consensus_score:.0f}% | Avg Confidence: {avg_confidence:.0f}%
             </p>
@@ -634,13 +647,25 @@ if round_1_positions:
             unsafe_allow_html=True
         )
         
-        # Add explanation box below
-        st.info(
-            f"{action_text}\n\n"
-            f"**How agents voted:** {vote_summary} — A 2–1 split means mixed signals; 3–0 means strong agreement.\n\n"
-            f"**Consensus Strength:** {consensus_score:.0f}% — Percent of agents aligned on the majority view.\n\n"
-            f"**Average Confidence:** {avg_confidence:.0f}% — Average certainty level across all agents. Higher = stronger agreement."
-        )
+        # Build explanation text dynamically based on consensus type
+        if is_no_consensus:
+            explanation_text = (
+                f"{action_text}\n\n"
+                f"**How agents voted:** {vote_summary} — A perfect 1-1-1 split means each agent holds a different view. This isn't weakness in the analysis—it reflects real market uncertainty.\n\n"
+                f"**Consensus Strength:** {consensus_score:.0f}% — No majority view; all stances equally weighted.\n\n"
+                f"**Average Confidence:** {avg_confidence:.0f}% — Average certainty level across agents."
+            )
+        else:
+            # For 2-1 or 3-0 consensus
+            consensus_type = "unanimous agreement" if is_strong_consensus else "a slight majority"
+            explanation_text = (
+                f"{action_text}\n\n"
+                f"**How agents voted:** {vote_summary} — {consensus_type}.\n\n"
+                f"**Consensus Strength:** {consensus_score:.0f}% — {'Perfect unanimity' if is_strong_consensus else 'Mixed signals with a lean'}: {'all 3 agents aligned' if is_strong_consensus else '2–1 split means some debate'}.\n\n"
+                f"**Average Confidence:** {avg_confidence:.0f}% — {'Very high' if avg_confidence >= 80 else 'moderate' if avg_confidence >= 60 else 'lower'} certainty across agents."
+            )
+        
+        st.info(explanation_text)
         st.divider()
     
     # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
