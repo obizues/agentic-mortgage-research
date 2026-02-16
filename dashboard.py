@@ -513,7 +513,14 @@ if round_1_positions:
             if 'debate_running' not in st.session_state:
                 st.session_state.debate_running = False
             
-            # If debate is running, execute it
+            # Always show the button
+            if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn", disabled=st.session_state.debate_running):
+                st.session_state.debate_running = True
+                st.rerun()
+            
+            st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
+            
+            # If debate is running, execute it BELOW the button
             if st.session_state.debate_running:
                 # Check cooldown only when actually trying to run
                 can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
@@ -527,13 +534,6 @@ if round_1_positions:
                         agent.save_debate_to_database(debate_db)
                         st.session_state.debate_running = False
                         st.rerun()
-            else:
-                # Always show active button - check cooldown only on click
-                if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
-                    st.session_state.debate_running = True
-                    st.rerun()
-                
-                st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
     # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
     col_btn1, col_btn2, col_btn3 = st.columns(3)
