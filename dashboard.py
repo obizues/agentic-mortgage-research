@@ -1002,14 +1002,6 @@ Provide:
                 df_patterns = pd.DataFrame(pattern_data)
                 st.dataframe(df_patterns, use_container_width=True, hide_index=True)
 
-                st.markdown(
-                    "Agents learn from past debates. When current market conditions match a learned pattern, agents use it to help guide their next recommendation. "
-                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence. The formula is:  "
-                    "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  "
-                    "$w_m = 1 - w_p$ (market weight, always at least 0.75)  "
-                    "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
-                )
-
                 # Short agent recommendation preview with weighted logic
                 st.markdown("**Current Recommendation Basis**")
                 if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
