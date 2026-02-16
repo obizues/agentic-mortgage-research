@@ -1,6 +1,8 @@
 import pandas as pd
 import config
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from io import StringIO
 from datetime import datetime, timedelta
 import json
@@ -22,6 +24,23 @@ class AgenticMortgageResearchAgent:
         self.session_cost = 0.0  # Track estimated LLM API costs
         # Initialize fetch_timestamps in knowledge for dashboard status display
         self.knowledge["fetch_timestamps"] = {}
+        
+        # Set up resilient HTTP session with retries
+        self.session = self._create_resilient_session()
+    
+    def _create_resilient_session(self):
+        """Create a requests session with retry logic for API calls."""
+        session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+        return session
 
     # ---------- Logging ----------
     def log(self, message: str):
@@ -261,20 +280,27 @@ Only include actions that should be run. Skip actions if data is recent and unch
         if "mortgage_rates" in self.knowledge and not force:
             return "Mortgage rates already loaded."
         self.log("⚙️ System: Fetching mortgage rates from FRED API...")
-        url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"
-        response = requests.get(url)
-        response.raise_for_status()
-        df = pd.read_csv(StringIO(response.text))
-        df.columns = df.columns.str.strip()
-        df = df.rename(columns={"observation_date": "date", "MORTGAGE30US": "rate"})
-        df["date"] = pd.to_datetime(df["date"])
-        df["rate"] = pd.to_numeric(df["rate"], errors="coerce")
-        self.knowledge["mortgage_rates"] = df.dropna()
-        # Track fetch timestamp
-        if "fetch_timestamps" not in self.knowledge:
-            self.knowledge["fetch_timestamps"] = {}
-        self.knowledge["fetch_timestamps"]["mortgage_rates"] = pd.Timestamp.now()
-        return "Mortgage rates fetched."
+        try:
+            url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"
+            response = self.session.get(url, timeout=30)
+            response.raise_for_status()
+            df = pd.read_csv(StringIO(response.text))
+            df.columns = df.columns.str.strip()
+            df = df.rename(columns={"observation_date": "date", "MORTGAGE30US": "rate"})
+            df["date"] = pd.to_datetime(df["date"])
+            df["rate"] = pd.to_numeric(df["rate"], errors="coerce")
+            self.knowledge["mortgage_rates"] = df.dropna()
+            # Track fetch timestamp
+            if "fetch_timestamps" not in self.knowledge:
+                self.knowledge["fetch_timestamps"] = {}
+            self.knowledge["fetch_timestamps"]["mortgage_rates"] = pd.Timestamp.now()
+            return "Mortgage rates fetched."
+        except Exception as e:
+            self.log(f"⚠️ Failed to fetch mortgage rates: {e}")
+            # Return cached data if available, otherwise use empty dataframe
+            if "mortgage_rates" not in self.knowledge:
+                self.knowledge["mortgage_rates"] = pd.DataFrame(columns=["date", "rate"])
+            return f"Failed to fetch rates (using cache): {str(e)}"
 
     def analyze_rates(self, force=False):
         if "mortgage_rates" not in self.knowledge or force:
@@ -297,20 +323,27 @@ Only include actions that should be run. Skip actions if data is recent and unch
         if "home_prices" in self.knowledge and not force:
             return "Home prices already loaded."
         self.log("⚙️ System: Fetching home price data from FRED API...")
-        url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CSUSHPINSA"
-        response = requests.get(url)
-        response.raise_for_status()
-        df = pd.read_csv(StringIO(response.text))
-        df.columns = df.columns.str.strip()
-        df = df.rename(columns={df.columns[0]: "date", df.columns[1]: "price"})
-        df["date"] = pd.to_datetime(df["date"])
-        df["price"] = pd.to_numeric(df["price"], errors="coerce")
-        self.knowledge["home_prices"] = df.dropna()
-        # Track fetch timestamp
-        if "fetch_timestamps" not in self.knowledge:
-            self.knowledge["fetch_timestamps"] = {}
-        self.knowledge["fetch_timestamps"]["home_prices"] = pd.Timestamp.now()
-        return "Home prices fetched."
+        try:
+            url = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CSUSHPINSA"
+            response = self.session.get(url, timeout=30)
+            response.raise_for_status()
+            df = pd.read_csv(StringIO(response.text))
+            df.columns = df.columns.str.strip()
+            df = df.rename(columns={df.columns[0]: "date", df.columns[1]: "price"})
+            df["date"] = pd.to_datetime(df["date"])
+            df["price"] = pd.to_numeric(df["price"], errors="coerce")
+            self.knowledge["home_prices"] = df.dropna()
+            # Track fetch timestamp
+            if "fetch_timestamps" not in self.knowledge:
+                self.knowledge["fetch_timestamps"] = {}
+            self.knowledge["fetch_timestamps"]["home_prices"] = pd.Timestamp.now()
+            return "Home prices fetched."
+        except Exception as e:
+            self.log(f"⚠️ Failed to fetch home prices: {e}")
+            # Return cached data if available, otherwise use empty dataframe
+            if "home_prices" not in self.knowledge:
+                self.knowledge["home_prices"] = pd.DataFrame(columns=["date", "price"])
+            return f"Failed to fetch prices (using cache): {str(e)}"
 
     def compare_with_home_prices(self, force=False):
         if "mortgage_rates" not in self.knowledge or force:
