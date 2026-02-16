@@ -427,8 +427,10 @@ with st.sidebar.expander("Agent Controls", expanded=False):
 # Run agentic plan on first load or if no debate data exists
 round_1_positions = agent.knowledge.get("debate_round_1", {})
 should_auto_run = st.session_state.first_run or not round_1_positions
+st.session_state.initializing = False
 
 if should_auto_run:
+    st.session_state.initializing = True
     with st.status("🤖 Multi-Agent System Initializing...", expanded=True) as status:
         try:
             if config.ENABLE_LLM_PLANNING:
@@ -462,6 +464,7 @@ if should_auto_run:
                     agent.llm_client = Anthropic(api_key=config.ANTHROPIC_API_KEY)
                 except Exception:
                     agent.llm_client = None
+            st.session_state.initializing = False
     st.session_state.first_run = False
 
 
@@ -523,7 +526,9 @@ if round_1_positions:
     st.markdown("### 🎬 Multi-Agent Debate & Analysis")
     
     # ===== SECTION 1: CONTINUE TO DEBATE PROMPT (at top, only on Round 1 if not complete) =====
-    if not debate_complete and round_1:
+    if st.session_state.get("initializing", False):
+        st.info("🤖 Initializing multi-agent analysis...")
+    elif not debate_complete and round_1:
         st.info(
             "**Three Unique AI Agents Ready to Debate**\n\n"
             "Each AI brings its own specialized perspective (see their initial positions below):\n\n"
