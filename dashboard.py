@@ -961,76 +961,13 @@ Provide:
             # Validation stats
             val_stats = debate_db.get_validation_stats()
             if val_stats['total_validated'] > 0:
+                st.markdown("**📚 Emerging Patterns (1+ validations)**")
                 st.caption(
-                    "Direction Correct = % of debates where the predicted direction (bullish, bearish, neutral) matched the actual outcome, regardless of category. "
-                    "Mortgage Rate Move = average percent change in the 30-year rate from debate date to validation date. "
-                    "\n\nAccuracy for each direction (bullish, bearish, neutral) is calculated separately and shows how often predictions for that specific direction were correct. This means Direction Correct can be high even if accuracy for individual directions is lower, depending on the distribution and correctness of predictions across categories."
+                    "💡 **How Patterns Inform Future Predictions:**\n"
+                    "The learning system analyzes past debates and extracts patterns that consistently lead to accurate predictions. "
+                    "These patterns are used by agents to guide their future recommendations, helping them recognize market conditions that have historically resulted in correct forecasts. "
+                    "Patterns with higher accuracy and frequency are weighted more heavily in agent decision-making, improving the system's ability to adapt and learn over time."
                 )
-                
-                # Accuracy trend charts
-                st.markdown("**📈 Prediction History & Learning**")
-                trend_data = debate_db.get_accuracy_trend()
-                if trend_data:
-                    import pandas as pd
-                    df_trend = pd.DataFrame(trend_data)
-
-                    # Derive clearer metrics for display
-                    df_trend['direction_correct'] = df_trend['status'].map({
-                        'correct': 100,
-                        'incorrect': 0
-                    })
-                    df_trend.loc[df_trend['status'] == 'pending', 'accuracy'] = None
-
-                    validated = df_trend[df_trend['status'] != 'pending']
-                    pending = df_trend[df_trend['status'] == 'pending']
-
-                    # Use integer ticks for debate numbers
-                    tick_values = sorted(df_trend['debate_num'].unique().tolist())
-
-                    # Chart 1: Direction correctness (hit/miss)
-                    if not validated.empty:
-                        chart_direction = alt.Chart(validated).mark_line(point=True, color='#0a74da', size=3).encode(
-                            x=alt.X(
-                                'debate_num:Q',
-                                title='Debate Number',
-                                axis=alt.Axis(format='d', values=tick_values)
-                            ),
-                            y=alt.Y('direction_correct:Q', title='Direction Correct (%)', scale=alt.Scale(domain=[0, 100])),
-                            tooltip=[
-                                alt.Tooltip('debate_num:Q', title='Debate #'),
-                                alt.Tooltip('direction_correct:Q', title='Direction Correct', format='.0f'),
-                                alt.Tooltip('status:N', title='Status'),
-                                alt.Tooltip('recommendation:N', title='Prediction')
-                            ]
-                        )
-                    else:
-                        chart_direction = alt.Chart(pd.DataFrame()).mark_line()
-
-                    # Chart 2: Mortgage rate move size
-                    if not validated.empty:
-                        chart_move = alt.Chart(validated).mark_line(point=True, color='#00c48c', size=3).encode(
-                            x=alt.X(
-                                'debate_num:Q',
-                                title='Debate Number',
-                                axis=alt.Axis(format='d', values=tick_values)
-                            ),
-                            y=alt.Y('accuracy:Q', title='Mortgage Rate Move (%)', scale=alt.Scale(domain=[0, 100])),
-                            tooltip=[
-                                alt.Tooltip('debate_num:Q', title='Debate #'),
-                                alt.Tooltip('accuracy:Q', title='Move Size', format='.1f'),
-                                alt.Tooltip('status:N', title='Status'),
-                                alt.Tooltip('recommendation:N', title='Prediction')
-                            ]
-                        )
-                    else:
-                        chart_move = alt.Chart(pd.DataFrame()).mark_line()
-
-                    st.markdown("**Direction Correctness**")
-                    st.altair_chart(chart_direction.properties(height=220), width="stretch")
-                    st.markdown("**Mortgage Rate Move Size**")
-                    st.altair_chart(chart_move.properties(height=220), width="stretch")
-
-                    validated_count = len(validated)
                     pending_count = len(pending)
                     st.caption(
                         f"💡 **Status**: {validated_count} validated debate{'s' if validated_count != 1 else ''} | "
