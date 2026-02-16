@@ -126,9 +126,21 @@ The debate system demonstrates true agentic autonomy where agents:
 
 ---
 
-## 🆕 What's New in v1.3.2 (Hotfix Rollup)
+## 🆕 What's New in v1.3.3 (UX Polish)
 
-**v1.3.2** is a hotfix rollup focused on **debate execution reliability**, **data fetch resilience**, and **clearer consensus messaging**.
+**v1.3.3** focuses on **debate workflow smoothness**, **honest consensus framing**, and **clearer result presentation**.
+
+### Key Improvements
+- **Instant Start Debate feedback**: Spinner now appears immediately when you click the button (no delay)
+- **Removed redundant messaging**: Success confirmation no longer flashes and disappears
+- **Auto-advance to results**: After debate completes, app automatically shows Round 2 cross-examination
+- **Consensus at top**: Final consensus now displays first for quick decision-making
+- **Honest disagreement display**: When all 3 agents vote differently (1-1-1 tie), it now shows "⚪ Agents Fundamentally Disagree" with gray styling—reflecting real market uncertainty rather than claiming false consensus
+- **Better consensus explanations**: Dynamically explains the difference between unanimous (3-0), slight majority (2-1), and complete disagreement (1-1-1)
+
+### Previous Release
+
+**v1.3.2** (Hotfix Rollup) focused on **debate execution reliability**, **data fetch resilience**, and **clearer consensus messaging**.
 
 ### Debate Execution & UX
 - **Start Debate Reliability**: Prevents duplicate buttons and hides the control while a debate is running
@@ -144,7 +156,7 @@ The debate system demonstrates true agentic autonomy where agents:
 ### Bug Fixes
 - **Session State Reference**: Fixed `first_run` NameError by using session state consistently
 
-**Migration from v1.3.1**: No breaking changes. Pull latest code and reboot Streamlit to pick up the hotfixes.
+**Migration from v1.3.2**: No breaking changes. Pull latest code and reboot Streamlit to pick up the UX improvements.
 
 ---
 
