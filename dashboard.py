@@ -968,11 +968,6 @@ Provide:
                     "These patterns are used by agents to guide their future recommendations, helping them recognize market conditions that have historically resulted in correct forecasts. "
                     "Patterns with higher accuracy and frequency are weighted more heavily in agent decision-making, improving the system's ability to adapt and learn over time."
                 )
-                    pending_count = len(pending)
-                    st.caption(
-                        f"💡 **Status**: {validated_count} validated debate{'s' if validated_count != 1 else ''} | "
-                        f"{pending_count} pending validation. Charts show validated-only metrics for clarity."
-                    )
                 else:
                     st.info("No debates yet. Run Agentic Plan and Start Debate to begin tracking predictions.")
                 
