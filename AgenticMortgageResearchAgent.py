@@ -831,7 +831,9 @@ REASONING: [your justification]"""
         
         # Calculate consensus
         from collections import Counter
+        self.log(f"DEBUG: vote_stances = {vote_stances}")
         vote_counts = Counter(vote_stances)
+        self.log(f"DEBUG: vote_breakdown = {dict(vote_counts)}")
         majority_vote = vote_counts.most_common(1)[0][0]
         consensus_score = (vote_counts[majority_vote] / len(vote_stances)) * 100
         
