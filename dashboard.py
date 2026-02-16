@@ -35,13 +35,8 @@ st.markdown(
             color-scheme: light !important;
         }
         
-        /* Ensure text is always readable on light backgrounds */
-        * {
-            color: #262730 !important;
-        }
-        
-        /* Specific Streamlit element overrides for iOS dark mode */
-        .stMarkdown, .stText, p, span, div, label {
+        /* Ensure text is always readable - target ONLY plain text, not styled components */
+        .stMarkdown p, .stText, p:not([style]), span:not([style]) {
             color: #262730 !important;
         }
         
@@ -71,9 +66,18 @@ st.markdown(
             color: #262730 !important;
         }
         
-        /* Headers must be dark */
-        h1, h2, h3, h4, h5, h6 {
+        /* Headers must be dark (except styled headers) */
+        h1:not(.fintech-header), h2:not(.fintech-header), h3, h4, h5, h6 {
             color: #262730 !important;
+        }
+        
+        /* PRESERVE styled components - these override the above */
+        .fintech-header {
+            color: white !important;
+        }
+        
+        .fintech-footer, .brand-block, .stats-badge {
+            color: #0a74da !important;
         }
         
         /* Remove top white space */
