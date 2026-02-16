@@ -159,6 +159,12 @@ st.sidebar.markdown(
 with st.sidebar.expander("ℹ️ About This Project", expanded=False):
     st.markdown(
         """
+        **Built By**
+        
+        VP Engineering | Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation | Scaling High-Performance Teams
+        
+        ---
+        
         **Portfolio Project**
         
         This is a demonstration of **agentic AI architecture** built to showcase:
