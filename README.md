@@ -126,6 +126,38 @@ The debate system demonstrates true agentic autonomy where agents:
 
 ---
 
+## 🧠 What's New in v1.3.5 (AI Learning Enabled)
+
+**v1.3.5** implements the **core AI learning functionality** - agents now actively improve their decisions based on historical patterns from validated debates.
+
+### Key Features
+- **Pattern Extraction from Validation**: When you validate a debate outcome, the system automatically extracts market patterns (conditions, prediction types, accuracy)
+- **Agent Pattern Reference**: All three agents now receive learned patterns in their prompts during each debate round
+  - **Round 1**: Agents see top patterns when forming initial positions
+  - **Round 2**: Patterns inform cross-examination challenges and counter-arguments
+  - **Round 3**: Patterns guide final confidence scoring and voting decisions
+- **Learned Patterns Dashboard**: New **"📚 Learned Patterns"** section shows accuracy and frequency of discovered patterns
+- **End-to-End Feedback Loop**: Validate outcome → Extract patterns → Future agents reference patterns → Improved predictions
+
+### Technical Implementation
+- **Database Schema**: Added `lessons_learned` table for persistent pattern storage
+- **Pattern Methods**: Three new database methods
+  - `extract_pattern_from_validation()`: Captures patterns when debates are validated
+  - `get_learned_patterns()`: Retrieves top patterns by accuracy and frequency
+  - `get_patterns_summary_for_agents()`: Generates human-readable summaries for agent prompts
+- **Agent Integration**: Updated all three debate rounds to inject pattern context into LLM prompts
+- **UI Display**: Patterns ranked by accuracy (%) and frequency (# of times observed)
+
+### How It Works
+1. Run a debate → Agents get current rate data
+2. Validate the outcome → System extracts "BULLISH 75% accurate when inflation falling" patterns
+3. Run next debate → New agents see the learned patterns in their context
+4. Over time → Agent predictions improve as they reference historical lessons
+
+**Foundation for**: Future AI self-improvement, cross-validation analysis, and prediction confidence calibration.
+
+### Previous Release
+
 ## 📊 What's New in v1.3.4 (Stable Baseline - Learning Ready)
 
 **v1.3.4** is a stable checkpoint before implementing **AI learning from outcome validation**. This release stabilizes all UX improvements and performance optimizations.
@@ -142,9 +174,10 @@ The debate system demonstrates true agentic autonomy where agents:
 - Historical debate database with outcome tracking ready for pattern extraction
 - UI/UX fully stabilized for feature additions
 
-**Next**: v1.3.5 will add **actual AI learning** - agents will improve predictions based on past validation results.
+**Status**: Learning system implemented in v1.3.5.
 
 ### Previous Release
+
 
 ## 🆕 What's New in v1.3.3 (UX Polish)
 
