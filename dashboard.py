@@ -944,54 +944,55 @@ else:
         )
 
 # ---------- Visualizations ----------
-st.subheader("📈 Data Visualizations")
+with st.expander("📈 Data Visualizations (Market Context)", expanded=False):
+    st.caption("Historical mortgage rates and home prices that inform the agents' analysis")
+    
+    # Mortgage Rates Chart
+    if "mortgage_rates" in agent.knowledge and not agent.knowledge["mortgage_rates"].empty:
+        df_rates = agent.knowledge["mortgage_rates"]
+        st.altair_chart(
+            alt.Chart(df_rates).mark_line(color='blue').encode(
+                x='date:T',
+                y='rate:Q',
+                tooltip=['date:T', 'rate:Q']
+            ).properties(title='30-Year Fixed Mortgage Rates', height=300),
+            width="stretch"
+        )
+    
+    # Home Prices Chart
+    if "home_prices" in agent.knowledge and not agent.knowledge["home_prices"].empty:
+        df_prices = agent.knowledge["home_prices"]
+        st.altair_chart(
+            alt.Chart(df_prices).mark_line(color='green').encode(
+                x='date:T',
+                y='price:Q',
+                tooltip=['date:T', 'price:Q']
+            ).properties(title='US Home Prices Index', height=300),
+            width="stretch"
+        )
+    
+    # Combined normalized chart
+    if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
+        df_rates = agent.knowledge["mortgage_rates"]
+        df_prices = agent.knowledge["home_prices"]
+        df_combined = pd.merge_asof(
+            df_rates.sort_values("date"),
+            df_prices.sort_values("date"),
+            on="date"
+        )
+        df_combined['rate_norm'] = df_combined['rate'] / df_combined['rate'].max()
+        df_combined['price_norm'] = df_combined['price'] / df_combined['price'].max()
 
-# Mortgage Rates Chart
-if "mortgage_rates" in agent.knowledge and not agent.knowledge["mortgage_rates"].empty:
-    df_rates = agent.knowledge["mortgage_rates"]
-    st.altair_chart(
-        alt.Chart(df_rates).mark_line(color='blue').encode(
+        chart_combined = alt.Chart(df_combined).transform_fold(
+            ['rate_norm', 'price_norm'],
+            as_=['Metric', 'Value']
+        ).mark_line().encode(
             x='date:T',
-            y='rate:Q',
-            tooltip=['date:T', 'rate:Q']
-        ).properties(title='30-Year Fixed Mortgage Rates', height=300),
-        width="stretch"
-    )
-
-# Home Prices Chart
-if "home_prices" in agent.knowledge and not agent.knowledge["home_prices"].empty:
-    df_prices = agent.knowledge["home_prices"]
-    st.altair_chart(
-        alt.Chart(df_prices).mark_line(color='green').encode(
-            x='date:T',
-            y='price:Q',
-            tooltip=['date:T', 'price:Q']
-        ).properties(title='US Home Prices Index', height=300),
-        width="stretch"
-    )
-
-# Combined normalized chart
-if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
-    df_rates = agent.knowledge["mortgage_rates"]
-    df_prices = agent.knowledge["home_prices"]
-    df_combined = pd.merge_asof(
-        df_rates.sort_values("date"),
-        df_prices.sort_values("date"),
-        on="date"
-    )
-    df_combined['rate_norm'] = df_combined['rate'] / df_combined['rate'].max()
-    df_combined['price_norm'] = df_combined['price'] / df_combined['price'].max()
-
-    chart_combined = alt.Chart(df_combined).transform_fold(
-        ['rate_norm', 'price_norm'],
-        as_=['Metric', 'Value']
-    ).mark_line().encode(
-        x='date:T',
-        y='Value:Q',
-        color='Metric:N',
-        tooltip=['date:T', 'Metric:N', 'Value:Q']
-    ).properties(title='Normalized Mortgage Rates vs Home Prices', height=300)
-    st.altair_chart(chart_combined, width="stretch")
+            y='Value:Q',
+            color='Metric:N',
+            tooltip=['date:T', 'Metric:N', 'Value:Q']
+        ).properties(title='Normalized Mortgage Rates vs Home Prices', height=300)
+        st.altair_chart(chart_combined, width="stretch")
 
 # ---------- Agent Logs ----------
 
