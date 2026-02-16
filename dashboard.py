@@ -934,8 +934,25 @@ Provide:
                     max_tokens=400,
                     messages=[{"role": "user", "content": summary_prompt}]
                 )
-                post_debate_summary = message.content[0].text.strip()
-                st.write(post_debate_summary)
+                # Robustly extract summary text from LLM response
+                summary_text = None
+                if hasattr(message, 'content') and isinstance(message.content, list):
+                    for block in message.content:
+                        # Try to extract text from known block types
+                        block_type = type(block).__name__
+                        if block_type == "TextBlock":
+                            summary_text = str(getattr(block, "text", "")).strip()
+                            if summary_text:
+                                break
+                        elif isinstance(block, str):
+                            summary_text = block.strip()
+                            break
+                    if not summary_text:
+                        # Fallback: try string conversion of first block
+                        summary_text = str(message.content[0]).strip() if message.content else None
+                if not summary_text:
+                    summary_text = agent.knowledge.get("summary", "No summary available.")
+                st.write(summary_text)
             except Exception as e:
                 st.write(agent.knowledge.get("summary", "No summary available."))
         else:
@@ -1012,24 +1029,51 @@ Provide:
                     current_rate = agent.knowledge['mortgage_rates'].iloc[-1]['rate']
                     avg_rate = agent.knowledge['mortgage_rates']['rate'].mean()
                     current_condition = 'Market condition: rates decreasing' if current_rate < avg_rate else 'Market condition: rates increasing'
+                    # Use exact match for prediction (no substring)
+                    import re
+                    def extract_pattern_signal(pred):
+                        pred = pred.strip().upper()
+                        if re.fullmatch(r"BULLISH", pred):
+                            return 1
+                        elif re.fullmatch(r"BEARISH", pred):
+                            return -1
+                        elif re.fullmatch(r"NEUTRAL", pred):
+                            return 0
+                        else:
+                            return None
+
                     matched_patterns = df_patterns[df_patterns['Condition'] == current_condition]
+                    debug_info = {
+                        'current_rate': current_rate,
+                        'avg_rate': avg_rate,
+                        'current_condition': current_condition,
+                        'matched_patterns': matched_patterns.to_dict('records') if not matched_patterns.empty else [],
+                    }
                     if not matched_patterns.empty:
                         # Use the most accurate pattern
-                        best_pattern = matched_patterns.iloc[matched_patterns['Accuracy'].astype(float).idxmax()]
+                        idx = matched_patterns['Accuracy'].astype(float).idxmax()
+                        best_pattern = matched_patterns.loc[idx]
+                        if isinstance(best_pattern, pd.DataFrame):
+                            best_pattern = best_pattern.iloc[0]
+                        accuracy = float(best_pattern['Accuracy']) if not isinstance(best_pattern['Accuracy'], pd.Series) else float(best_pattern['Accuracy'].iloc[0])
+                        accuracy = accuracy / 100.0
                         accuracy = float(best_pattern['Accuracy']) / 100.0
                         wp = accuracy * 0.25
                         wm = 1 - wp
-                        # Market signal: +1 for decreasing, -1 for increasing
                         market_signal = 1 if current_condition == 'Market condition: rates decreasing' else -1
-                        # Pattern signal: +1 for BULLISH, -1 for BEARISH, 0 for NEUTRAL
-                        pred = best_pattern['Prediction'].upper()
-                        if 'BULLISH' in pred:
-                            pattern_signal = 1
-                        elif 'BEARISH' in pred:
-                            pattern_signal = -1
-                        else:
-                            pattern_signal = 0
-                        final_score = wm * market_signal + wp * pattern_signal
+                        pred = best_pattern['Prediction'].strip().upper()
+                        pattern_signal = extract_pattern_signal(pred)
+                        debug_info.update({
+                            'best_pattern': best_pattern.to_dict(),
+                            'accuracy': accuracy,
+                            'wp': wp,
+                            'wm': wm,
+                            'market_signal': market_signal,
+                            'pattern_signal': pattern_signal
+                        })
+                        if pattern_signal is None:
+                            st.warning(f"Pattern prediction '{best_pattern['Prediction']}' is not recognized as BULLISH, BEARISH, or NEUTRAL.")
+                        final_score = wm * market_signal + wp * (pattern_signal if pattern_signal is not None else 0)
                         if final_score > 0.1:
                             rec = 'BULLISH'
                         elif final_score < -0.1:
@@ -1040,12 +1084,16 @@ Provide:
                         st.write(f"**Weighted Recommendation:** {rec}  ")
                         st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, Final Score = {final_score:.2f}")
                         st.write(f"**Formula:**"
-                                "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  \n"
+                                "$w_p = \\text{{accuracy}} \\times 0.25$ (pattern weight, max 0.25)  \n"
                                 "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
                                 "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
                         )
+                        with st.expander("🛠️ Debug: Pattern Recommendation Logic", expanded=False):
+                            st.json(debug_info)
                     else:
                         st.info("No learned patterns match current market conditions.")
+                        with st.expander("🛠️ Debug: Pattern Recommendation Logic", expanded=False):
+                            st.json(debug_info)
             else:
                 st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
 
