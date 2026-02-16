@@ -510,28 +510,28 @@ if round_1_positions:
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
-            # Check cooldown status BEFORE rendering button
-            can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
-            
             if 'debate_running' not in st.session_state:
                 st.session_state.debate_running = False
             
             # If debate is running, execute it
             if st.session_state.debate_running:
-                with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                    result = agent.continue_debate(force=True)
-                    agent.save_debate_to_database(debate_db)
-                    st.session_state.debate_running = False
-                    st.rerun()
-            # Otherwise show button or warning
-            else:
+                # Check cooldown only when actually trying to run
+                can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
                 if error_msg:
                     st.warning(error_msg)
-                    st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn", disabled=True)
+                    st.session_state.debate_running = False
+                    st.rerun()
                 else:
-                    if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
-                        st.session_state.debate_running = True
+                    with st.spinner("🎯 Running cross-examination and consensus rounds..."):
+                        result = agent.continue_debate(force=True)
+                        agent.save_debate_to_database(debate_db)
+                        st.session_state.debate_running = False
                         st.rerun()
+            else:
+                # Always show active button - check cooldown only on click
+                if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
+                    st.session_state.debate_running = True
+                    st.rerun()
                 
                 st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
