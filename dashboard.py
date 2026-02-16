@@ -471,7 +471,14 @@ with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
             if can_run:
                 result = agent.run_agent_debate(force=True)
                 mark_llm_action_success(requires_llm=True)
-                agent.save_debate_to_database(debate_db)
+                debate_id = agent.save_debate_to_database(debate_db)
+                
+                # Auto-validate immediately using current rates
+                if debate_id and "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
+                    current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
+                    validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
+                    st.info(f"[Learning] Debate #{debate_id} validated: {validation_result['status'].upper()}")
+                
                 st.success(result)
                 st.rerun()
             elif error_msg:
@@ -629,7 +636,14 @@ if round_1_positions:
                                 result = agent.continue_debate(force=True)
                                 if "debate_results" in agent.knowledge:
                                     mark_llm_action_success(requires_llm=True)
-                                    agent.save_debate_to_database(debate_db)
+                                    debate_id = agent.save_debate_to_database(debate_db)
+                                    
+                                    # Auto-validate immediately using current rates
+                                    if debate_id and "mortgage_rates" in agent.knowledge and len(agent.knowledge["mortgage_rates"]) > 0:
+                                        current_rate = float(agent.knowledge["mortgage_rates"].iloc[-1]['rate'])
+                                        validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
+                                        st.info(f"[Learning] Debate #{debate_id} validated: {validation_result['status'].upper()}")
+                                    
                                     st.session_state.debate_in_progress = False
                                     st.session_state.selected_round = 2  # Auto-advance to Round 2 to show cross-examination
                                     st.rerun()
