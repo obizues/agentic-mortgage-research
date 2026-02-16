@@ -130,12 +130,12 @@ st.markdown(
         <b>Chris Obermeier</b> | VP Engineering
         <br>
         <span style="font-size: 0.85rem; opacity: 0.8;">Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation</span>
-        <p style="margin: 6px 0 2px 0; font-size: 0.9rem;">
+        <p style="margin: 4px 0 0 0; font-size: 0.9rem; line-height: 1.2;">
         <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | 
         <a href="https://github.com/obizues" target="_blank">GitHub</a> | 
         <a href="mailto:chris.obermeier@gmail.com">Email</a>
         </p>
-        <p style="margin: 2px 0; font-size: 0.9rem;">
+        <p style="margin: 0 0 2px 0; font-size: 0.9rem; line-height: 1.2;">
         ⭐ <a href="https://github.com/obizues/agentic-mortgage-research" target="_blank">Star on GitHub</a> | 
         📖 <a href="https://github.com/obizues/agentic-mortgage-research#readme" target="_blank">Read Documentation</a> | 
         🎓 <a href="https://github.com/obizues/agentic-mortgage-research/blob/main/ARCHITECTURE.md" target="_blank">View Architecture</a>
