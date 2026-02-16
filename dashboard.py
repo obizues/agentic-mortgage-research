@@ -789,7 +789,7 @@ Provide:
 
 else:
     # Helpful message when debate data isn't loaded (e.g., after app redeploy)
-    if first_run and not st.session_state.get('plan_generated', False):
+    if st.session_state.first_run and not st.session_state.get('plan_generated', False):
         st.info(
             "💬 **Multi-Agent Debate System Ready**\n\n"
             "Once you generate the Agentic Plan above, three specialized AI agents will create "
