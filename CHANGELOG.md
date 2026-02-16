@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.2] - 2026-02-15
+
+### 🔧 Hotfixes
+
+#### Added
+- **Start Debate Guardrails**: Prevented duplicate button rendering and hid controls while a debate runs
+- **Initialization Gating**: Debate UI waits for auto-initialization to complete
+- **FRED Retry/Timeouts**: Resilient data fetch with graceful fallback when API is slow or unavailable
+- **Consensus Summary Clarity**: Human-readable vote breakdown with consensus strength and average confidence
+
+#### Changed
+- **LLM Cooldown Behavior**: Cooldown applied only after successful LLM runs; reset on first load
+- **Empty Data Handling**: Safeguards for missing rate/price data to avoid index errors
+- **Streamlit Width API**: Replaced deprecated `use_container_width` with `width="stretch"`
+- **Session State Consistency**: Fixed `first_run` reference via session state
+
+---
+
 ## [1.3.1] - 2026-02-15
 
 ### 🎨 UX & Mobile Improvements
@@ -143,7 +161,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-- **v1.3.1** (Current): UX & Infrastructure Hardening
+- **v1.3.2** (Current): Hotfix Rollup
+- **v1.3.1**: UX & Infrastructure Hardening
 - **v1.3.0**: Multi-Agent Debate System with Historical Learning
 - **v1.2.0**: LLM-Driven Planning & Insights
 - **v1.1.0**: Data Visualization & UI Improvements

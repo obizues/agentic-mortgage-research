@@ -145,7 +145,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.info("App version: v1.3.1 - UX & Infrastructure Hardening")
+st.sidebar.info("App version: v1.3.2 - Hotfixes")
 
 st.sidebar.markdown(
     """
