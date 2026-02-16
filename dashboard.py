@@ -18,9 +18,64 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Force light color scheme in all browsers + iOS Chrome
+st.markdown(
+    """
+    <meta name="color-scheme" content="light only">
+    <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
+    """,
+    unsafe_allow_html=True
+)
+
 st.markdown(
     """
     <style>
+        /* Force light color scheme globally */
+        :root, html, body {
+            color-scheme: light !important;
+        }
+        
+        /* Ensure text is always readable on light backgrounds */
+        * {
+            color: #262730 !important;
+        }
+        
+        /* Specific Streamlit element overrides for iOS dark mode */
+        .stMarkdown, .stText, p, span, div, label {
+            color: #262730 !important;
+        }
+        
+        /* Ensure links are visible */
+        a {
+            color: #0a74da !important;
+        }
+        
+        /* Button text must be white on color backgrounds */
+        .stButton > button {
+            color: white !important;
+        }
+        
+        /* Sidebar text must be dark */
+        section[data-testid="stSidebar"] {
+            color-scheme: light !important;
+        }
+        
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] span,
+        section[data-testid="stSidebar"] div {
+            color: #262730 !important;
+        }
+        
+        /* Input/text area text */
+        input, textarea, select {
+            color: #262730 !important;
+        }
+        
+        /* Headers must be dark */
+        h1, h2, h3, h4, h5, h6 {
+            color: #262730 !important;
+        }
+        
         /* Remove top white space */
         .block-container {
             padding-top: 1rem;
