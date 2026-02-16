@@ -127,16 +127,14 @@ st.markdown(
 st.markdown(
     """
     <div class="fintech-footer">
-        <b>Chris Obermeier</b> | VP Engineering
-        <br>
-        <span style="font-size: 0.85rem; opacity: 0.8;">Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation</span>
-        <p style="margin: 4px 0; font-size: 0.8rem;">
+        <b>Chris Obermeier</b> | VP Engineering | Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation
+        <p style="margin: 2px 0; font-size: 0.75rem;">
         <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | 
         <a href="https://github.com/obizues" target="_blank">GitHub</a> | 
         <a href="mailto:chris.obermeier@gmail.com">Email</a> | 
-        <a href="https://github.com/obizues/agentic-mortgage-research" target="_blank">⭐ Star</a> | 
-        <a href="https://github.com/obizues/agentic-mortgage-research#readme" target="_blank">📖 Docs</a> | 
-        <a href="https://github.com/obizues/agentic-mortgage-research/blob/main/ARCHITECTURE.md" target="_blank">🎓 Arch</a>
+        <a href="https://github.com/obizues/agentic-mortgage-research" target="_blank">★</a> | 
+        <a href="https://github.com/obizues/agentic-mortgage-research#readme" target="_blank">📖</a> | 
+        <a href="https://github.com/obizues/agentic-mortgage-research/blob/main/ARCHITECTURE.md" target="_blank">🏗</a>
         </p>
     </div>
     """,
@@ -513,27 +511,31 @@ if round_1_positions:
         with col_btn2:
             # Simple button - click triggers immediate execution check
             if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
-                # Check cooldown when clicked
-                can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
-                if error_msg:
-                    # Show error inline - DON'T rerun (prevents duplicate button appearance)
-                    st.warning(error_msg)
+                # First verify LLM client is available
+                if agent.llm_client is None:
+                    st.error("❌ LLM client not available. Cannot run debate. Check your Anthropic API key.")
                 else:
-                    # Run the debate
-                    try:
-                        with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                            result = agent.continue_debate(force=True)
-                            
-                            # Verify debate actually completed
-                            if "debate_results" in agent.knowledge:
-                                agent.save_debate_to_database(debate_db)
-                                st.success("✅ Debate completed successfully! Refreshing...")
-                                time.sleep(0.5)  # Brief pause so user sees success message
-                                st.rerun()
-                            else:
-                                st.error("❌ Debate did not complete properly. Check agent logs below.")
-                    except Exception as e:
-                        st.error(f"❌ Error running debate: {e}")
+                    # Check cooldown when clicked
+                    can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
+                    if error_msg:
+                        # Show error inline - DON'T rerun (prevents duplicate button appearance)
+                        st.warning(error_msg)
+                    else:
+                        # Run the debate
+                        try:
+                            with st.spinner("🎯 Running cross-examination and consensus rounds..."):
+                                result = agent.continue_debate(force=True)
+                                
+                                # Verify debate actually completed
+                                if "debate_results" in agent.knowledge:
+                                    agent.save_debate_to_database(debate_db)
+                                    st.success("✅ Debate completed successfully! Refreshing...")
+                                    time.sleep(0.5)  # Brief pause so user sees success message
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Debate did not complete properly. Check agent logs below.")
+                        except Exception as e:
+                            st.error(f"❌ Error running debate: {e}")
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
