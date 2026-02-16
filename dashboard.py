@@ -951,8 +951,9 @@ Provide:
             val_stats = debate_db.get_validation_stats()
             if val_stats['total_validated'] > 0:
                 st.caption(
-                    "**Emerging Patterns**: Agents learn from past debates. When current market conditions match a learned pattern, agents use it to help guide their next recommendation. "
-                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence. "
+                    "**Emerging Patterns**: The agent always prioritizes the current market, but will lean toward a learned pattern if it has proven accurate in similar conditions."
+                )
+                st.caption(
                     "The formula is:  \n"
                     "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  \n"
                     "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
