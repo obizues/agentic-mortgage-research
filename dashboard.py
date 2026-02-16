@@ -544,6 +544,10 @@ if round_1_positions:
 
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
+            # Show spinner early if debate is already in progress from previous cycle
+            if st.session_state.debate_in_progress:
+                st.spinner("🎯 Running cross-examination and consensus rounds...")
+            
             if st.session_state.pending_debate or st.session_state.debate_in_progress:
                 # Run the debate from the pending state and hide the button while running
                 st.session_state.pending_debate = False
@@ -567,8 +571,6 @@ if round_1_positions:
                                 if "debate_results" in agent.knowledge:
                                     mark_llm_action_success(requires_llm=True)
                                     agent.save_debate_to_database(debate_db)
-                                    st.success("✅ Debate completed successfully! Refreshing...")
-                                    time.sleep(0.5)  # Brief pause so user sees success message
                                     st.session_state.debate_in_progress = False
                                     st.rerun()
                                 else:
