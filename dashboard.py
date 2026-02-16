@@ -963,13 +963,25 @@ Provide:
                     pattern_data = []
                     for pattern in learned_patterns:
                         pattern_data.append({
-                            "Pattern": pattern['pattern'],
-                            "Accuracy": f"{pattern['accuracy']:.1f}%",
+                            "Prediction": pattern['pattern'],
+                            "Accuracy": float(pattern['accuracy']),
                             "Frequency": pattern['frequency'],
                             "Condition": pattern['condition']
                         })
                     df_patterns = pd.DataFrame(pattern_data)
                     st.dataframe(df_patterns, use_container_width=True, hide_index=True)
+
+                    # Add accuracy by prediction and condition graph
+                    if not df_patterns.empty:
+                        st.markdown("**Prediction Accuracy by Condition**")
+                        import altair as alt
+                        chart = alt.Chart(df_patterns).mark_bar().encode(
+                            x=alt.X('Condition:N', title='Condition'),
+                            y=alt.Y('Accuracy:Q', title='Accuracy (%)'),
+                            color='Prediction:N',
+                            tooltip=['Prediction', 'Condition', 'Accuracy', 'Frequency']
+                        ).properties(height=300)
+                        st.altair_chart(chart, use_container_width=True)
                 else:
                     st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
             
