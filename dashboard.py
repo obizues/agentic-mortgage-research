@@ -951,7 +951,12 @@ Provide:
             val_stats = debate_db.get_validation_stats()
             if val_stats['total_validated'] > 0:
                 st.caption(
-                    "**Emerging Patterns**: Agents learn from past debates. When current market conditions match a learned pattern, agents use it to guide their next recommendation. Patterns with higher accuracy and frequency have more influence."
+                    "**Emerging Patterns**: Agents learn from past debates. When current market conditions match a learned pattern, agents use it to help guide their next recommendation. "
+                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence. "
+                    "The formula is:  \n"
+                    "$w_p = \\text{accuracy} \\times 0.25$ (pattern weight, max 0.25)  \n"
+                    "$w_m = 1 - w_p$ (market weight, always at least 0.75)  \n"
+                    "Final Score = $w_m \\times$ market signal $+$ $w_p \\times$ pattern signal."
                 )
                 learned_patterns = None
                 try:
@@ -971,14 +976,39 @@ Provide:
                     df_patterns = pd.DataFrame(pattern_data)
                     st.dataframe(df_patterns, use_container_width=True, hide_index=True)
 
-                    # Short agent recommendation preview
+                    # Short agent recommendation preview with weighted logic
                     st.markdown("**Current Recommendation Basis**")
                     if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
-                        current_condition = 'Market condition: rates decreasing' if agent.knowledge['mortgage_rates'].iloc[-1]['rate'] < agent.knowledge['mortgage_rates']['rate'].mean() else 'Market condition: rates increasing'
+                        current_rate = agent.knowledge['mortgage_rates'].iloc[-1]['rate']
+                        avg_rate = agent.knowledge['mortgage_rates']['rate'].mean()
+                        current_condition = 'Market condition: rates decreasing' if current_rate < avg_rate else 'Market condition: rates increasing'
                         matched_patterns = df_patterns[df_patterns['Condition'] == current_condition]
                         if not matched_patterns.empty:
-                            for idx, row in matched_patterns.iterrows():
-                                st.write(f"Pattern: {row['Prediction']} | Accuracy: {row['Accuracy']}% | Used for: {row['Condition']}")
+                            # Use the most accurate pattern
+                            best_pattern = matched_patterns.iloc[matched_patterns['Accuracy'].astype(float).idxmax()]
+                            accuracy = float(best_pattern['Accuracy']) / 100.0
+                            wp = accuracy * 0.25
+                            wm = 1 - wp
+                            # Market signal: +1 for decreasing, -1 for increasing
+                            market_signal = 1 if current_condition == 'Market condition: rates decreasing' else -1
+                            # Pattern signal: +1 for BULLISH, -1 for BEARISH, 0 for NEUTRAL
+                            pred = best_pattern['Prediction'].upper()
+                            if 'BULLISH' in pred:
+                                pattern_signal = 1
+                            elif 'BEARISH' in pred:
+                                pattern_signal = -1
+                            else:
+                                pattern_signal = 0
+                            final_score = wm * market_signal + wp * pattern_signal
+                            if final_score > 0.1:
+                                rec = 'BULLISH'
+                            elif final_score < -0.1:
+                                rec = 'BEARISH'
+                            else:
+                                rec = 'NEUTRAL'
+                            st.write(f"Pattern: {best_pattern['Prediction']} | Accuracy: {best_pattern['Accuracy']}% | Used for: {best_pattern['Condition']}")
+                            st.write(f"**Weighted Recommendation:** {rec}  ")
+                            st.caption(f"$w_p$ = {wp:.2f}, $w_m$ = {wm:.2f}, Final Score = {final_score:.2f}")
                         else:
                             st.info("No learned patterns match current market conditions.")
                 else:
