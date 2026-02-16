@@ -129,15 +129,14 @@ st.markdown(
     <div class="fintech-footer">
         <b>Chris Obermeier</b> | VP Engineering
         <br>
-        <span style="font-size: 0.9rem; opacity: 0.85;">Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation</span>
-        <p style="margin-top: 8px;">
+        <span style="font-size: 0.85rem; opacity: 0.8;">Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation</span>
+        <p style="margin: 6px 0 4px 0; font-size: 0.85rem;">
         <a href="https://www.linkedin.com/in/chris-obermeier" target="_blank">LinkedIn</a> | 
         <a href="https://github.com/obizues" target="_blank">GitHub</a> | 
-        <a href="mailto:chris.obermeier@gmail.com">Email</a>
-        <p style="margin-top: 12px; font-size: 0.95rem;">
-        ⭐ <a href="https://github.com/obizues/agentic-mortgage-research" target="_blank">Star on GitHub</a> | 
-        📖 <a href="https://github.com/obizues/agentic-mortgage-research#readme" target="_blank">Read Documentation</a> | 
-        🎓 <a href="https://github.com/obizues/agentic-mortgage-research/blob/main/ARCHITECTURE.md" target="_blank">View Architecture</a>
+        <a href="mailto:chris.obermeier@gmail.com">Email</a> | 
+        ⭐ <a href="https://github.com/obizues/agentic-mortgage-research" target="_blank">Star</a> | 
+        📖 <a href="https://github.com/obizues/agentic-mortgage-research#readme" target="_blank">Docs</a> | 
+        🎓 <a href="https://github.com/obizues/agentic-mortgage-research/blob/main/ARCHITECTURE.md" target="_blank">Architecture</a>
         </p>
     </div>
     """,
@@ -512,32 +511,29 @@ if round_1_positions:
         
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
-            # Check for and display any pending messages from previous button click
-            if 'debate_message' in st.session_state:
-                msg_type, msg_text = st.session_state.debate_message
-                if msg_type == 'warning':
-                    st.warning(msg_text)
-                elif msg_type == 'error':
-                    st.error(msg_text)
-                del st.session_state.debate_message
-            
             # Simple button - click triggers immediate execution check
             if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
                 # Check cooldown when clicked
                 can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
                 if error_msg:
-                    st.session_state.debate_message = ('warning', error_msg)
-                    st.rerun()
+                    # Show error inline - DON'T rerun (prevents duplicate button appearance)
+                    st.warning(error_msg)
                 else:
                     # Run the debate
                     try:
                         with st.spinner("🎯 Running cross-examination and consensus rounds..."):
                             result = agent.continue_debate(force=True)
-                            agent.save_debate_to_database(debate_db)
-                        st.rerun()
+                            
+                            # Verify debate actually completed
+                            if "debate_results" in agent.knowledge:
+                                agent.save_debate_to_database(debate_db)
+                                st.success("✅ Debate completed successfully! Refreshing...")
+                                time.sleep(0.5)  # Brief pause so user sees success message
+                                st.rerun()
+                            else:
+                                st.error("❌ Debate did not complete properly. Check agent logs below.")
                     except Exception as e:
-                        st.session_state.debate_message = ('error', f"Error running debate: {e}")
-                        st.rerun()
+                        st.error(f"❌ Error running debate: {e}")
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
