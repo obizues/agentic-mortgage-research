@@ -651,18 +651,56 @@ if round_1_positions:
 elif not round_1_positions:
     st.info("Run Agentic Plan to generate initial agent positions and start the debate.")
 
-# ---------- Historical Debates Section ----------
+# ---------- Executive Summary & Historical Debates ----------
 if round_1_positions:
-    # Historical Debates Section
+    # Executive Summary (moved below debate for context) - only show if debate is complete
+    if debate_complete:
+        st.divider()
+        st.subheader("📊 Executive Summary")
+        st.caption("Generated after debate consensus")
+        
+        # Generate post-debate summary incorporating consensus
+        if agent.llm_client:
+            try:
+                summary_prompt = f"""Based on a multi-agent mortgage market debate, provide a 3-paragraph executive summary:
+
+Debate Consensus: {agent.knowledge['debate_results']['final_recommendation']}
+Vote Breakdown: {agent.knowledge['debate_results']['vote_breakdown']}
+
+Current mortgage rate: {agent.knowledge.get('rate_insights', {}).get('latest_rate', 'N/A')}%
+12-month average: {agent.knowledge.get('rate_insights', {}).get('12_month_avg', 'N/A')}%
+Home price trend: {agent.knowledge.get('comparison', 'N/A')}
+
+Provide:
+1. Market assessment
+2. Implications for homebuyers
+3. Key recommendation informed by agent consensus"""
+                
+                message = agent.llm_client.messages.create(
+                    model=config.MODEL_NAME,
+                    max_tokens=400,
+                    messages=[{"role": "user", "content": summary_prompt}]
+                )
+                post_debate_summary = message.content[0].text.strip()
+                st.write(post_debate_summary)
+            except Exception as e:
+                st.write(agent.knowledge.get("summary", "No summary available."))
+        else:
+            st.write(agent.knowledge.get("summary", "No summary available."))
+    
+    # Historical Debates Section (moved below Executive Summary)
     st.divider()
     with st.expander("📊 Historical Debates & Learning System", expanded=False):
         st.info("""
-        This section tracks all past debates stored in the database. Each debate includes:
-        - **Consensus Score**: How aligned the agents were
-        - **Validation Status**: Whether predictions were accurate (compared against actual market movements)
-        - **Accuracy Rate**: Overall system performance over time
+        **Track Past Predictions & System Performance**
         
-        Use the 'Outcome Validation' sidebar to validate past debates by comparing their predictions to current market data.
+        This section stores all debates with:
+        - **Consensus Score**: How aligned the agents were in their final votes
+        - **Validation Status**: Whether predictions matched actual market movements
+        - **Accuracy Tracking**: Overall system performance over time
+        
+        💡 **Value**: Learn from past debates to see if the multi-agent system's predictions have been accurate.
+        Use the 'Outcome Validation' sidebar to compare past predictions against current market data.
         """)
         
         # Get recent debates from database
@@ -703,41 +741,6 @@ if round_1_positions:
                         st.json(debate_details)
         else:
             st.info("No historical debates yet. Run your first debate to see results here!")
-
-    # Executive Summary (moved below debate for context) - only show if debate is complete
-    if debate_complete:
-        st.divider()
-        st.subheader("📊 Executive Summary")
-        st.caption("Generated after debate consensus")
-        
-        # Generate post-debate summary incorporating consensus
-        if agent.llm_client:
-            try:
-                summary_prompt = f"""Based on a multi-agent mortgage market debate, provide a 3-paragraph executive summary:
-
-Debate Consensus: {agent.knowledge['debate_results']['final_recommendation']}
-Vote Breakdown: {agent.knowledge['debate_results']['vote_breakdown']}
-
-Current mortgage rate: {agent.knowledge.get('rate_insights', {}).get('latest_rate', 'N/A')}%
-12-month average: {agent.knowledge.get('rate_insights', {}).get('12_month_avg', 'N/A')}%
-Home price trend: {agent.knowledge.get('comparison', 'N/A')}
-
-Provide:
-1. Market assessment
-2. Implications for homebuyers
-3. Key recommendation informed by agent consensus"""
-                
-                message = agent.llm_client.messages.create(
-                    model=config.MODEL_NAME,
-                    max_tokens=400,
-                    messages=[{"role": "user", "content": summary_prompt}]
-                )
-                post_debate_summary = message.content[0].text.strip()
-                st.write(post_debate_summary)
-            except Exception as e:
-                st.write(agent.knowledge.get("summary", "No summary available."))
-        else:
-            st.write(agent.knowledge.get("summary", "No summary available."))
 
 else:
     # Helpful message when debate data isn't loaded (e.g., after app redeploy)
