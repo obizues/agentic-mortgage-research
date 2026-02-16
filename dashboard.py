@@ -507,19 +507,17 @@ if round_1_positions:
             
             if not st.session_state.debate_running:
                 if st.button("🔥 Start Debate", use_container_width=True, type="primary", key="continue_debate_btn"):
-                    st.session_state.debate_running = True
-                    st.rerun()
+                    can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
+                    if error_msg:
+                        st.warning(error_msg)
+                    elif can_run:
+                        st.session_state.debate_running = True
+                        with st.spinner("🎯 Running cross-examination and consensus rounds..."):
+                            result = agent.continue_debate(force=True)
+                            agent.save_debate_to_database(debate_db)
+                            st.session_state.debate_running = False
+                            st.rerun()
                 st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
-            else:
-                can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
-                if error_msg:
-                    st.warning(error_msg)
-                elif can_run:
-                    with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                        result = agent.continue_debate(force=True)
-                        agent.save_debate_to_database(debate_db)
-                        st.session_state.debate_running = False
-                        st.rerun()
     
     # ===== SECTION 2: ROUND SELECTOR BUTTONS =====
     col_btn1, col_btn2, col_btn3 = st.columns(3)
@@ -600,16 +598,38 @@ if round_1_positions:
     if debate_complete:
         st.divider()
         debate_results = agent.knowledge["debate_results"]
+        final_stance = debate_results['final_recommendation']
+        
+        # Determine background gradient and call to action based on stance
+        if "BULLISH" in final_stance:
+            bg_gradient = "linear-gradient(135deg, #00c48c 0%, #0a74da 100%)"
+            stance_emoji = "🟢"
+            action_text = "**What this means:** Market conditions favor homebuyers. Rates are expected to be favorable—consider moving forward with mortgage decisions."
+        elif "BEARISH" in final_stance:
+            bg_gradient = "linear-gradient(135deg, #e53e3e 0%, #ff6b6b 100%)"
+            stance_emoji = "🔴"
+            action_text = "**What this means:** Market conditions suggest caution. Rates may be less favorable—consider waiting or exploring alternatives."
+        else:  # NEUTRAL
+            bg_gradient = "linear-gradient(135deg, #ffa500 0%, #ffcc00 100%)"
+            stance_emoji = "🟡"
+            action_text = "**What this means:** Market signals are mixed. No strong direction—evaluate your personal circumstances carefully."
+        
         st.markdown(
-            f"""<div style='padding: 20px; background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%); 
-            color: white; border-radius: 8px; text-align: center;'>
-            <h2 style='margin: 0;'>✅ Final Recommendation: {debate_results['final_recommendation']}</h2>
-            <p style='margin-top: 8px; font-size: 1.1rem;'>
-            Vote Breakdown: {debate_results['vote_breakdown']} | 
-            Avg Confidence: {debate_results['avg_confidence']:.0f}%
+            f"""<div style='padding: 20px; background: {bg_gradient}; 
+            color: white; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);'>
+            <h2 style='margin: 0;'>{stance_emoji} Final Consensus: {final_stance}</h2>
+            <p style='margin-top: 8px; font-size: 1rem; opacity: 0.95;'>
+            {debate_results['vote_breakdown']} agents voted | Average Confidence: {debate_results['avg_confidence']:.0f}%
             </p>
             </div>""",
             unsafe_allow_html=True
+        )
+        
+        # Add explanation box below
+        st.info(
+            f"{action_text}\n\n"
+            f"**Vote Breakdown:** {debate_results['vote_breakdown']} — This shows how each of the 3 agents voted after reviewing all evidence.\n\n"
+            f"**Confidence Score:** {debate_results['avg_confidence']:.0f}% — Average certainty level across all agents. Higher = stronger agreement."
         )
 
 elif not round_1_positions:
@@ -766,28 +786,54 @@ if all(k in agent.knowledge for k in ["mortgage_rates", "home_prices"]):
 # ---------- Agent Logs ----------
 
 # Move logs to sidebar expander
-with st.sidebar.expander("📝 Agent Logs", expanded=False):
-    st.caption(f"Decision trace - {len(agent.logs)} total entries")
-    st.info("💡 Logs persist across actions. Expand this section after running debates to see all agent reasoning.")
+with st.sidebar.expander("📝 Agent Activity Log", expanded=False):
+    st.caption(f"📚 {len(agent.logs)} total activities tracked")
+    st.info("💡 **What you're seeing**: Real-time agent operations and decisions")
+    
     log_filter = st.radio(
-        "Filter logs:",
-        ["All logs", "LLM decisions only", "Role outputs only"],
+        "Show me:",
+        ["🎯 All Activity", "🤖 AI Decisions", "👥 Agent Actions"],
         index=0,
         horizontal=True
     )
     
-    if log_filter == "LLM decisions only":
+    if log_filter == "🤖 AI Decisions":
         filtered_logs = [log for log in agent.logs if "LLM" in log]
-        recent_logs = filtered_logs[-100:]
-        st.text("\n".join(recent_logs) or "No LLM decisions yet.")
-    elif log_filter == "Role outputs only":
+        recent_logs = filtered_logs[-50:]
+        if recent_logs:
+            for log in recent_logs:
+                # Clean up log format - remove timestamps and make more readable
+                clean_log = log.replace("[LLM]", "🤖 **AI Decision:**")
+                st.markdown(clean_log)
+        else:
+            st.caption("No AI decisions yet - run Agentic Plan to see AI in action")
+    elif log_filter == "👥 Agent Actions":
         # Filter for role-specific logs (with emojis)
-        filtered_logs = [log for log in agent.logs if any(keyword in log for keyword in ["📊", "📈", "🔍", "⚖️", "💡", "🧠", "🛡️", "📉"])]
-        recent_logs = filtered_logs[-100:]
-        st.text("\n".join(recent_logs) or "No role outputs yet.")
+        filtered_logs = [log for log in agent.logs if any(keyword in log for keyword in ["📊", "⚙️", "🛡️", "📉"])]
+        recent_logs = filtered_logs[-50:]
+        if recent_logs:
+            for log in recent_logs:
+                # Format each log entry with better spacing
+                if "📊" in log:
+                    st.markdown(f"📊 **Planner:** {log.split('📊')[1] if '📊' in log else log}")
+                elif "📉" in log:
+                    st.markdown(f"📉 **Market Analyst:** {log.split('📉')[1] if '📉' in log else log}")
+                elif "🛡️" in log:
+                    st.markdown(f"🛡️ **Risk Officer:** {log.split('🛡️')[1] if '🛡️' in log else log}")
+                elif "⚙️" in log:
+                    st.markdown(f"⚙️ **System:** {log.split('⚙️')[1] if '⚙️' in log else log}")
+                else:
+                    st.markdown(log)
+        else:
+            st.caption("No agent actions yet - generate the Agentic Plan to see agents work")
     else:
-        recent_logs = agent.logs[-200:]
-        st.text("\n".join(recent_logs) or "No agent decisions yet.")
+        recent_logs = agent.logs[-100:]
+        if recent_logs:
+            st.markdown("**Recent Activity:**")
+            for log in recent_logs:
+                st.caption(log)
+        else:
+            st.caption("No activity yet - start by running the Agentic Plan")
 
 # ---------- Outcome Validation ----------
 with st.sidebar.expander("📊 Outcome Validation", expanded=False):
