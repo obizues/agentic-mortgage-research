@@ -296,3 +296,30 @@ class DebateDatabase:
             }
         
         return {'total_validated': 0, 'avg_accuracy': 0.0, 'correct_count': 0, 'accuracy_rate': 0.0}
+
+    def get_accuracy_trend(self) -> List[Dict[str, Any]]:
+        """Get accuracy trend over time for validated debates.
+        
+        Returns list of dicts with: debate_number, timestamp, accuracy, status
+        Useful for showing learning/improvement over time.
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                ROW_NUMBER() OVER (ORDER BY timestamp) as debate_num,
+                timestamp,
+                validation_accuracy,
+                validation_status,
+                final_recommendation
+            FROM debates
+            WHERE validation_status IS NOT NULL
+            ORDER BY timestamp ASC
+        """)
+        
+        columns = ['debate_num', 'timestamp', 'accuracy', 'status', 'recommendation']
+        results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        
+        conn.close()
+        return results

@@ -714,6 +714,37 @@ Provide:
                 col1.metric("Total Validated", val_stats['total_validated'])
                 col2.metric("Accuracy Rate", f"{val_stats['accuracy_rate']}%")
                 col3.metric("Avg Accuracy", f"{val_stats['avg_accuracy']:.1f}%")
+                
+                # Accuracy trend chart
+                st.markdown("**📈 Prediction Accuracy Over Time**")
+                trend_data = debate_db.get_accuracy_trend()
+                if trend_data:
+                    import pandas as pd
+                    df_trend = pd.DataFrame(trend_data)
+                    
+                    # Create line chart showing accuracy trend
+                    chart = alt.Chart(df_trend).mark_line(point=True, color='#0a74da').encode(
+                        x=alt.X('debate_num:Q', title='Debate Number', axis=alt.Axis(format='d')),
+                        y=alt.Y('accuracy:Q', title='Accuracy (%)', scale=alt.Scale(domain=[0, 100])),
+                        tooltip=[
+                            alt.Tooltip('debate_num:Q', title='Debate #'),
+                            alt.Tooltip('accuracy:Q', title='Accuracy', format='.1f'),
+                            alt.Tooltip('status:N', title='Status'),
+                            alt.Tooltip('recommendation:N', title='Prediction')
+                        ]
+                    ).properties(
+                        height=250,
+                        title='Multi-Agent System Learning: Accuracy improves as more predictions are validated'
+                    )
+                    
+                    # Add reference line at 50% (baseline)
+                    baseline = alt.Chart(pd.DataFrame({'y': [50]})).mark_rule(color='gray', strokeDash=[3, 3]).encode(
+                        y='y:Q'
+                    )
+                    
+                    st.altair_chart(chart + baseline, use_container_width=True)
+                    st.caption("💡 **Tip**: Each point represents a validated debate. Higher accuracy = better predictions.")
+                
                 st.divider()
             
             # Display recent debates
