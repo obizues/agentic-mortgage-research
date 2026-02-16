@@ -542,52 +542,51 @@ if round_1_positions:
         if "pending_debate" not in st.session_state:
             st.session_state.pending_debate = False
 
-        if st.session_state.pending_debate:
-            # Run the debate from the pending state to avoid duplicate button rendering
-            st.session_state.pending_debate = False
-            # First verify LLM client is available
-            if llm_client is None:
-                st.error(f"❌ LLM not available: {llm_init_error}")
-                st.session_state.debate_in_progress = False
-            elif agent.llm_client is None:
-                st.error("❌ Agent LLM client is None. This shouldn't happen – please refresh the page.")
-                st.session_state.debate_in_progress = False
-            else:
-                can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
-                if error_msg:
-                    st.warning(error_msg)
-                    st.session_state.debate_in_progress = False
-                else:
-                    try:
-                        with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                            result = agent.continue_debate(force=True)
-                            if "debate_results" in agent.knowledge:
-                                mark_llm_action_success(requires_llm=True)
-                                agent.save_debate_to_database(debate_db)
-                                st.success("✅ Debate completed successfully! Refreshing...")
-                                time.sleep(0.5)  # Brief pause so user sees success message
-                                st.session_state.debate_in_progress = False
-                                st.rerun()
-                            else:
-                                st.error("❌ Debate did not complete properly. Check agent logs below.")
-                                st.session_state.debate_in_progress = False
-                    except Exception as e:
-                        st.error(f"❌ Error running debate: {e}")
-                        st.session_state.debate_in_progress = False
-
         col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
         with col_btn2:
-            # Single button; disabled state prevents duplicate rendering
-            if st.button(
-                "🔥 Start Debate",
-                width="stretch",
-                type="primary",
-                key="continue_debate_btn",
-                disabled=st.session_state.debate_in_progress,
-            ):
+            if st.session_state.pending_debate or st.session_state.debate_in_progress:
+                # Run the debate from the pending state and hide the button while running
+                st.session_state.pending_debate = False
                 st.session_state.debate_in_progress = True
-                st.session_state.pending_debate = True
-                st.rerun()
+                # First verify LLM client is available
+                if llm_client is None:
+                    st.error(f"❌ LLM not available: {llm_init_error}")
+                    st.session_state.debate_in_progress = False
+                elif agent.llm_client is None:
+                    st.error("❌ Agent LLM client is None. This shouldn't happen – please refresh the page.")
+                    st.session_state.debate_in_progress = False
+                else:
+                    can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
+                    if error_msg:
+                        st.warning(error_msg)
+                        st.session_state.debate_in_progress = False
+                    else:
+                        try:
+                            with st.spinner("🎯 Running cross-examination and consensus rounds..."):
+                                result = agent.continue_debate(force=True)
+                                if "debate_results" in agent.knowledge:
+                                    mark_llm_action_success(requires_llm=True)
+                                    agent.save_debate_to_database(debate_db)
+                                    st.success("✅ Debate completed successfully! Refreshing...")
+                                    time.sleep(0.5)  # Brief pause so user sees success message
+                                    st.session_state.debate_in_progress = False
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Debate did not complete properly. Check agent logs below.")
+                                    st.session_state.debate_in_progress = False
+                        except Exception as e:
+                            st.error(f"❌ Error running debate: {e}")
+                            st.session_state.debate_in_progress = False
+            else:
+                # Single button; disabled state prevents duplicate rendering
+                if st.button(
+                    "🔥 Start Debate",
+                    width="stretch",
+                    type="primary",
+                    key="continue_debate_btn",
+                ):
+                    st.session_state.pending_debate = True
+                    st.rerun()
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
