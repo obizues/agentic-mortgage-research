@@ -310,6 +310,10 @@ if "llm_calls" not in st.session_state:
 if "last_llm_call_at" not in st.session_state:
     st.session_state.last_llm_call_at = 0.0
 
+if st.session_state.first_run:
+    st.session_state.llm_calls = 0
+    st.session_state.last_llm_call_at = 0.0
+
 agent = st.session_state.agent
 debate_db = st.session_state.debate_db
 
