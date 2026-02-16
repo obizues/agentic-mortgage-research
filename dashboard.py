@@ -161,6 +161,8 @@ with st.sidebar.expander("ℹ️ About This Project", expanded=False):
         """
         **Built By**
         
+        [github.com/obizues](https://github.com/obizues)
+        
         VP Engineering | Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation | Scaling High-Performance Teams
         
         ---
