@@ -992,11 +992,6 @@ Provide:
                     tick_values = sorted(df_trend['debate_num'].unique().tolist())
 
                     # Chart 1: Direction correctness (hit/miss)
-                    direction_title = alt.TitleParams(
-                        text="Direction Correctness",
-                        anchor="start",
-                        fontSize=12
-                    )
                     if not validated.empty:
                         chart_direction = alt.Chart(validated).mark_line(point=True, color='#0a74da', size=3).encode(
                             x=alt.X(
@@ -1011,16 +1006,11 @@ Provide:
                                 alt.Tooltip('status:N', title='Status'),
                                 alt.Tooltip('recommendation:N', title='Prediction')
                             ]
-                        ).properties(title=direction_title)
+                        )
                     else:
                         chart_direction = alt.Chart(pd.DataFrame()).mark_line()
 
                     # Chart 2: Mortgage rate move size
-                    move_title = alt.TitleParams(
-                        text="Mortgage Rate Move Size",
-                        anchor="start",
-                        fontSize=12
-                    )
                     if not validated.empty:
                         chart_move = alt.Chart(validated).mark_line(point=True, color='#00c48c', size=3).encode(
                             x=alt.X(
@@ -1035,11 +1025,13 @@ Provide:
                                 alt.Tooltip('status:N', title='Status'),
                                 alt.Tooltip('recommendation:N', title='Prediction')
                             ]
-                        ).properties(title=move_title)
+                        )
                     else:
                         chart_move = alt.Chart(pd.DataFrame()).mark_line()
 
+                    st.markdown("**Direction Correctness**")
                     st.altair_chart(chart_direction.properties(height=220), width="stretch")
+                    st.markdown("**Mortgage Rate Move Size**")
                     st.altair_chart(chart_move.properties(height=220), width="stretch")
 
                     validated_count = len(validated)

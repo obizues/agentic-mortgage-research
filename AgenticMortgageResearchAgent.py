@@ -615,6 +615,11 @@ Provide 2-3 concise bullet points for your perspective."""
     def _debate_round_1_initial_positions(self):
         """Round 1: Each agent presents their initial position."""
         self.log("📋 Round 1: Initial Positions")
+
+        # Reset downstream rounds when starting a new debate cycle.
+        for key in ("debate_round_2", "debate_round_3", "debate_results"):
+            if key in self.knowledge:
+                del self.knowledge[key]
         
         rate_insights = self.knowledge.get("rate_insights", {})
         comparison = self.knowledge.get("comparison", "No comparison available")
