@@ -805,16 +805,15 @@ REASONING: [your justification]"""
             
             vote_text = message.content[0].text.strip()
             
-            # Parse vote
+            # Parse vote using explicit VOTE: line
             stance = "NEUTRAL"
             confidence = 50.0
-            
-            if "BULLISH" in vote_text.upper():
-                stance = "BULLISH"
-            elif "BEARISH" in vote_text.upper():
-                stance = "BEARISH"
-            
             import re
+            vote_match = re.search(r'^VOTE:\s*([A-Z]+)', vote_text, re.MULTILINE | re.IGNORECASE)
+            if vote_match:
+                vote_val = vote_match.group(1).upper()
+                if vote_val in ["BULLISH", "BEARISH", "NEUTRAL"]:
+                    stance = vote_val
             conf_match = re.search(r'CONFIDENCE:\s*(\d+)', vote_text, re.IGNORECASE)
             if conf_match:
                 confidence = float(conf_match.group(1))
