@@ -942,17 +942,7 @@ Provide:
     # Historical Debates Section (moved below Executive Summary)
     st.divider()
     with st.expander("📊 Historical Debates & Learning System", expanded=False):
-        st.info("""
-        **Track Past Predictions & System Performance**
-        
-        This section stores all debates with:
-        - **Consensus Score**: How aligned the agents were in their final votes
-        - **Validation Status**: Whether predictions matched actual market movements
-        - **Accuracy Tracking**: Overall system performance over time
-        
-        💡 **Value**: Learn from past debates to see if the multi-agent system's predictions have been accurate.
-        Use the 'Outcome Validation' sidebar to compare past predictions against current market data.
-        """)
+        st.info("")
         
         # Get recent debates from database
         recent_debates = debate_db.get_recent_debates(limit=10)
@@ -963,6 +953,10 @@ Provide:
             if val_stats['total_validated'] > 0:
                 st.markdown("**📚 System Learning & Value**")
                 st.caption(
+                    "This section tracks past predictions and system performance.\n\n"
+                    "- **Consensus Score**: How aligned the agents were in their final votes\n"
+                    "- **Validation Status**: Whether predictions matched actual market movements\n"
+                    "- **Accuracy Tracking**: Overall system performance over time\n\n"
                     "💡 **Value**: Learn from past debates to see if the multi-agent system's predictions have been accurate.\n\n"
                     "**Emerging Patterns**: The table below shows patterns learned from past debates, including their accuracy, frequency, and condition.\n"
                     "Agents use these patterns to guide their future recommendations. Patterns with higher accuracy and frequency are weighted more heavily, helping agents recognize market conditions that have historically resulted in correct forecasts."
