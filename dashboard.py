@@ -669,7 +669,17 @@ if round_1_positions:
     if debate_complete:
         st.divider()
         debate_results = agent.knowledge["debate_results"]
-        final_stance = debate_results['final_recommendation']
+        final_stance = debate_results.get("majority_vote", "NEUTRAL")
+        consensus_score = debate_results.get("consensus_score", 0)
+        avg_confidence = debate_results.get("avg_confidence", 0)
+        vote_breakdown = debate_results.get("vote_breakdown", {})
+        vote_order = ["BULLISH", "BEARISH", "NEUTRAL"]
+        vote_parts = [
+            f"{vote_breakdown[stance]} {stance.title()}"
+            for stance in vote_order
+            if stance in vote_breakdown
+        ]
+        vote_summary = ", ".join(vote_parts) if vote_parts else "No votes recorded"
         
         # Determine background gradient and call to action based on stance
         if "BULLISH" in final_stance:
@@ -690,7 +700,7 @@ if round_1_positions:
             color: white; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);'>
             <h2 style='margin: 0;'>{stance_emoji} Final Consensus: {final_stance}</h2>
             <p style='margin-top: 8px; font-size: 1rem; opacity: 0.95;'>
-            {debate_results['vote_breakdown']} agents voted | Average Confidence: {debate_results['avg_confidence']:.0f}%
+            Votes: {vote_summary} | Consensus Strength: {consensus_score:.0f}% | Avg Confidence: {avg_confidence:.0f}%
             </p>
             </div>""",
             unsafe_allow_html=True
@@ -699,8 +709,9 @@ if round_1_positions:
         # Add explanation box below
         st.info(
             f"{action_text}\n\n"
-            f"**Vote Breakdown:** {debate_results['vote_breakdown']} — This shows how each of the 3 agents voted after reviewing all evidence.\n\n"
-            f"**Confidence Score:** {debate_results['avg_confidence']:.0f}% — Average certainty level across all agents. Higher = stronger agreement."
+            f"**How agents voted:** {vote_summary} — A 2–1 split means mixed signals; 3–0 means strong agreement.\n\n"
+            f"**Consensus Strength:** {consensus_score:.0f}% — Percent of agents aligned on the majority view.\n\n"
+            f"**Average Confidence:** {avg_confidence:.0f}% — Average certainty level across all agents. Higher = stronger agreement."
         )
 
 elif not round_1_positions:
