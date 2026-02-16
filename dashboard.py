@@ -665,9 +665,9 @@ if round_1_positions:
         vote_summary = ", ".join(vote_parts) if vote_parts else "No votes recorded"
         
         # Check if this is a true consensus (2+ agents agree) or a complete disagreement (1-1-1 tie)
-        is_no_consensus = consensus_score <= 33.5  # True tie: 1 vote vs 1 vs 1
-        is_weak_consensus = 33.5 < consensus_score < 66.5  # Weak: 2-1 split
-        is_strong_consensus = consensus_score >= 66.5  # Strong: 3-0 unanimous
+        is_no_consensus = consensus_score <= 33.5  # No majority: 1 vote (33%)
+        is_weak_consensus = 33.5 < consensus_score < 99  # Weak majority: 2 votes (67%)
+        is_strong_consensus = consensus_score >= 99  # Strong unanimous: 3 votes (100%)
         
         if is_no_consensus:
             # Complete disagreement: special styling
@@ -712,11 +712,17 @@ if round_1_positions:
             )
         else:
             # For 2-1 or 3-0 consensus
-            consensus_type = "unanimous agreement" if is_strong_consensus else "a slight majority"
+            if is_strong_consensus:
+                consensus_description = "unanimous agreement"
+                strength_description = "Perfect unanimity: all 3 agents aligned"
+            else:  # is_weak_consensus (2-1 split)
+                consensus_description = "a majority decision"
+                strength_description = "Moderate agreement: 2 agents aligned, 1 dissents"
+            
             explanation_text = (
                 f"{action_text}\n\n"
-                f"**How agents voted:** {vote_summary} — {consensus_type}.\n\n"
-                f"**Consensus Strength:** {consensus_score:.0f}% — {'Perfect unanimity' if is_strong_consensus else 'Mixed signals with a lean'}: {'all 3 agents aligned' if is_strong_consensus else '2–1 split means some debate'}.\n\n"
+                f"**How agents voted:** {vote_summary} — {consensus_description}.\n\n"
+                f"**Consensus Strength:** {consensus_score:.0f}% — {strength_description}.\n\n"
                 f"**Average Confidence:** {avg_confidence:.0f}% — {'Very high' if avg_confidence >= 80 else 'moderate' if avg_confidence >= 60 else 'lower'} certainty across agents."
             )
         
