@@ -961,12 +961,11 @@ Provide:
             # Validation stats
             val_stats = debate_db.get_validation_stats()
             if val_stats['total_validated'] > 0:
-                st.markdown("**📚 Emerging Patterns (1+ validations)**")
+                st.markdown("**📚 Emerging Patterns**")
                 st.caption(
                     "💡 **How Patterns Inform Future Predictions:**\n"
-                    "The learning system analyzes past debates and extracts patterns that consistently lead to accurate predictions. "
-                    "These patterns are used by agents to guide their future recommendations, helping them recognize market conditions that have historically resulted in correct forecasts. "
-                    "Patterns with higher accuracy and frequency are weighted more heavily in agent decision-making, improving the system's ability to adapt and learn over time."
+                    "The table below shows patterns learned from past debates, including their accuracy, frequency, and condition. "
+                    "Agents use these patterns to guide their future recommendations. Patterns with higher accuracy and frequency are weighted more heavily, helping agents recognize market conditions that have historically resulted in correct forecasts."
                 )
                 
                 st.divider()
@@ -979,7 +978,6 @@ Provide:
                     learned_patterns = debate_db.get_learned_patterns(limit=5)
                 
                 if learned_patterns:
-                    # Create a dataframe for better visualization
                     import pandas as pd
                     pattern_data = []
                     for pattern in learned_patterns:
@@ -989,14 +987,8 @@ Provide:
                             "Frequency": pattern['frequency'],
                             "Condition": pattern['condition']
                         })
-                    
                     df_patterns = pd.DataFrame(pattern_data)
                     st.dataframe(df_patterns, use_container_width=True, hide_index=True)
-                    
-                    st.caption(
-                        "💡 **Learning System**: These patterns have been extracted from past validated debates and "
-                        "are used to inform future agent predictions. Higher accuracy and frequency indicate stronger patterns."
-                    )
                 else:
                     st.info("📕 No patterns learned yet. Run additional debates to build a visible learning trail.")
                 
