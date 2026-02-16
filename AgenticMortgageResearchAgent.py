@@ -809,9 +809,12 @@ REASONING: [your justification]"""
             stance = "NEUTRAL"
             confidence = 50.0
             import re
-            vote_match = re.search(r'^VOTE:\s*([A-Z]+)', vote_text, re.MULTILINE | re.IGNORECASE)
+            # Robust regex: match 'VOTE' with or without colon, allow markdown, whitespace, etc.
+            vote_match = re.search(r'^\s*VOTE[:\-]?\s*([A-Z]+)', vote_text, re.MULTILINE | re.IGNORECASE)
+            self.log(f"DEBUG: vote_text = {vote_text}")
             if vote_match:
                 vote_val = vote_match.group(1).upper()
+                self.log(f"DEBUG: vote_match group = {vote_val}")
                 if vote_val in ["BULLISH", "BEARISH", "NEUTRAL"]:
                     stance = vote_val
             conf_match = re.search(r'CONFIDENCE:\s*(\d+)', vote_text, re.IGNORECASE)
