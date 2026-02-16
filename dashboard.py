@@ -330,6 +330,9 @@ def can_run_llm_action(action_label, requires_llm=False):
             return False, "LLM is disabled for this session."
         return True, None
 
+    if not requires_llm:
+        return True, None
+
     max_calls = getattr(config, 'LLM_MAX_CALLS_PER_SESSION', 8)
     cooldown = getattr(config, 'LLM_COOLDOWN_SECONDS', 45)
     now = time.time()
@@ -343,9 +346,15 @@ def can_run_llm_action(action_label, requires_llm=False):
         msg = f"⏳ Please wait {int(wait_time)}s before running another LLM action."
         return False, msg
 
-    st.session_state.last_llm_call_at = now
-    st.session_state.llm_calls += 1
     return True, None
+
+
+def mark_llm_action_success(requires_llm=False):
+    if not requires_llm:
+        return
+
+    st.session_state.last_llm_call_at = time.time()
+    st.session_state.llm_calls += 1
 
 
 def run_action_ui(action_name, force=False, use_spinner=True, requires_llm=False):
@@ -360,6 +369,7 @@ def run_action_ui(action_name, force=False, use_spinner=True, requires_llm=False
                 agent.run_action(action_name, force=force)
         else:
             agent.run_action(action_name, force=force)
+        mark_llm_action_success(requires_llm=requires_llm)
     except Exception as e:
         st.error(f"Error running {action_name}: {e}")
 
@@ -386,6 +396,7 @@ with st.sidebar.expander("Agent Controls", expanded=False):
                 can_run, error_msg = can_run_llm_action("regenerate_round_1", requires_llm=True)
                 if can_run:
                     agent._debate_round_1_initial_positions()
+                    mark_llm_action_success(requires_llm=True)
                     st.success("✅ Round 1 positions regenerated!")
                     st.rerun()
                 elif error_msg:
@@ -396,6 +407,7 @@ with st.sidebar.expander("Agent Controls", expanded=False):
             can_run, error_msg = can_run_llm_action("run_full_debate", requires_llm=True)
             if can_run:
                 result = agent.run_agent_debate(force=True)
+                mark_llm_action_success(requires_llm=True)
                 agent.save_debate_to_database(debate_db)
                 st.success(result)
                 st.rerun()
@@ -538,6 +550,7 @@ if round_1_positions:
                                 
                                 # Verify debate actually completed
                                 if "debate_results" in agent.knowledge:
+                                    mark_llm_action_success(requires_llm=True)
                                     agent.save_debate_to_database(debate_db)
                                     st.success("✅ Debate completed successfully! Refreshing...")
                                     time.sleep(0.5)  # Brief pause so user sees success message
