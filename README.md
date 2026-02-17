@@ -133,6 +133,15 @@ The debate system demonstrates true agentic autonomy where agents:
 ---
 
 
+
+## 🛠️ What's New in v1.3.7 (Polishing the UI)
+
+**v1.3.7** focuses on UI polish and accessibility. The Historical Debates & System Learning section now always displays the recommendation formula and explanation, even if there are no validated debates or learned patterns yet. LaTeX and formula containers are fully responsive for mobile. All log text is normal weight (not bold), and the dashboard is visually consistent across all devices.
+
+**Status:** This release polishes the UI for maximum clarity and accessibility. All recent feedback addressed.
+
+---
+
 ## 🛠️ What's New in v1.3.6 (Hotfix: Dark Mode Cleared)
 
 **v1.3.6** is a hotfix release that fully eliminates all dark mode and color-scheme issues across all devices and browsers. The dashboard is now always readable, with all text, tables, graphs, and buttons forced to light mode and high-contrast colors. The top banner no longer glows, and all visual glitches from dark mode are resolved.
