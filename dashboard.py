@@ -339,8 +339,7 @@ st.markdown(
             margin-bottom: 0;
             font-size: 2rem;
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(10, 116, 218, 0.15);
-            text-shadow: 0 1px 4px #fff, 0 0px 2px #fff;
+            /* box-shadow and text-shadow removed to eliminate glow */
         }
         .fintech-footer {
             margin-top: 0;
