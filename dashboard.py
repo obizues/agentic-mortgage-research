@@ -31,22 +31,18 @@ st.markdown(
     """
     <style>
         /* Force light color scheme globally */
-                st.markdown(
-                    "Agents learn from past debates. When current market conditions match a learned pattern, agents use it to help guide their next recommendation. "
-                    "The agent combines the current market signal with the most accurate matching pattern, but the market always has the most influence."
-                )
+        html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"] {
+            background: #fff !important;
+            color: #111 !important;
         }
-        
         /* Ensure links are visible */
         a {
             color: #0a74da !important;
         }
-        
         /* Button text must be dark for readability */
         .stButton > button:enabled {
             color: #222 !important;
         }
-
         /* Make disabled buttons visibly greyed out */
         button:disabled,
         button[disabled],
@@ -983,9 +979,9 @@ Provide:
     # Historical Debates Section (moved below Executive Summary)
     st.divider()
     with st.expander("📚 Historical Debates & System Learning", expanded=False):
-        st.info("💡 **Value**: Learn from past debates using historical multi-agent system's predictions' accuracy.")
+        st.caption("💡 Learn from past debates using historical multi-agent system's predictions' accuracy.")
         st.markdown(
-            "<div style='font-size:0.92em; color:#555; margin-bottom:0.5em;'>"
+            "<div style='font-size:0.85em; color:#888; margin-bottom:0.2em; margin-top:-0.5em;'>"
             "Pattern accuracy influences up to 25% of the final score. Agent consensus drives the remaining 75%."
             "</div>", unsafe_allow_html=True)
         # Get recent debates from database
@@ -1118,14 +1114,15 @@ Provide:
                             rec = 'BEARISH'
                         else:
                             rec = 'NEUTRAL'
-                        st.write(f"{best_pattern['Prediction']} | Accuracy: {round(float(best_pattern['Accuracy']), 2)}% | Used for: {best_pattern['Condition']}")
+                        st.write(f"{best_pattern['Prediction']} prediction when {best_pattern['Condition']} | Accuracy: {round(float(best_pattern['Accuracy']), 2)}%")
                         st.write(f"**Weighted Recommendation:** {rec}")
                         st.write("**Formula Breakdown:**")
                         st.latex(r"w_p = \text{(pattern accuracy)} \times 0.25")
-                        st.markdown("<div style='text-align:center; font-size:0.95em; color:#888;'>Pattern weight (max 0.25)</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align:center; font-size:0.85em; color:#bbb;'>Pattern weight (max 0.25)</div>", unsafe_allow_html=True)
                         st.latex(r"w_a = 0.75")
-                        st.markdown("<div style='text-align:center; font-size:0.95em; color:#888;'>Agent research weight</div>", unsafe_allow_html=True)
+                        st.markdown("<div style='text-align:center; font-size:0.85em; color:#bbb;'>Agent research weight</div>", unsafe_allow_html=True)
                         st.latex(r"\text{Final Score} = w_a \times \text{(agent consensus)} + w_p \times \text{(pattern signal)}")
+                        st.markdown("<div style='margin-bottom:0.5em;'></div>", unsafe_allow_html=True)
                         
                         # Move the individual debates expander to the bottom
                         if recent_debates:

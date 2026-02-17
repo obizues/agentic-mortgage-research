@@ -661,7 +661,8 @@ Market Context:
 
 Task:
 1. At the very top, write a single line in the format: Initial Position: [BULLISH/BEARISH/NEUTRAL] (required)
-2. Then, provide your initial market position in 3-4 bullet points. Be specific about why you lean BULLISH (rates will fall), BEARISH (rates will rise/stay high), or NEUTRAL. Include your confidence level (0-100%).
+2. Then, provide your initial market position in 3-4 bullet points. Be specific about why you lean BULLISH (rates will fall), BEARISH (rates will rise/stay high), or NEUTRAL.
+3. At the very end, on a new line, state your overall confidence as: Confidence level: XX% (one value only, do not include confidence in any bullet points or anywhere else).
 """
 
                 message = self.llm_client.messages.create(
@@ -699,7 +700,7 @@ Task:
                 # Flatten and filter out empty matches
                 conf_values = [float(val) for group in conf_matches for val in group if val]
                 if conf_values:
-                    confidence = min(conf_values)  # Use the lowest confidence value found
+                    confidence = conf_values[0]  # Use only the first confidence value found
 
                 # Log for debugging
                 self.log(f"DEBUG: Round 1 position_text = {position_text}")
