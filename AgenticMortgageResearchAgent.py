@@ -813,9 +813,15 @@ Provide 2-3 bullet points. Be specific about which agent you're addressing."""
         for role_name in round_1.keys():
             agent_r1 = round_1[role_name]
             agent_r2 = round_2.get(role_name, {})
-            
+            prior_cross = agent_r2.get('cross_examination', '').upper()
+            # Try to extract prior stated stance from round 2
+            import re
+            prior_stance = None
+            for s in ["BULLISH", "BEARISH", "NEUTRAL"]:
+                if f"MAINTAIN {s}" in prior_cross or f"REMAIN {s}" in prior_cross or f"KEEP {s}" in prior_cross:
+                    prior_stance = s
+                    break
             self.log(f"{agent_r1['emoji']} {role_name}: Casting final vote...")
-            
             prompt = f"""You are the {role_name}. Review your debate history:{learned_patterns}
 
 ROUND 1 - Your Initial Position:
@@ -823,6 +829,8 @@ ROUND 1 - Your Initial Position:
 
 ROUND 2 - Your Cross-Examination Response:
 {agent_r2.get('cross_examination', 'N/A')}
+
+IMPORTANT: In Round 2, you stated your intention to {'maintain your ' + prior_stance + ' stance' if prior_stance else 'take a specific stance'}. If you change your stance in this final vote, you MUST provide a clear and specific reason for doing so. Your reasoning should explicitly mention why you are changing from your previous stance.
 
 Task: Cast your FINAL VOTE on the mortgage rate outlook:
 1. Choose: BULLISH (rates falling), BEARISH (rates rising/high), or NEUTRAL
@@ -840,13 +848,11 @@ REASONING: [your justification]"""
                 messages=[{"role": "user", "content": prompt}]
             )
             self.session_cost += 0.002
-            
             vote_text = message.content[0].text.strip()
-            
+
             # Parse vote using explicit VOTE: line
             stance = "NEUTRAL"
             confidence = 50.0
-            import re
             # Robust regex: match 'VOTE' with or without colon, allow markdown, whitespace, etc.
             vote_match = re.search(r'^\s*VOTE[:\-]?\s*([A-Z\s]+)', vote_text, re.MULTILINE | re.IGNORECASE)
             self.log(f"DEBUG: vote_text = {vote_text}")
@@ -863,7 +869,15 @@ REASONING: [your justification]"""
             conf_match = re.search(r'CONFIDENCE:\s*(\d+)', vote_text, re.IGNORECASE)
             if conf_match:
                 confidence = float(conf_match.group(1))
-            
+
+            # Post-processing: If stance changed from prior_stance, require justification
+            stance_changed = prior_stance and stance != prior_stance
+            if stance_changed:
+                # Require the reasoning to mention the new stance or a reason for change
+                if stance not in vote_text.upper() and "CHANGE" not in vote_text.upper() and "REASON" not in vote_text.upper():
+                    self.log(f"WARNING: {role_name} changed stance from {prior_stance} to {stance} in Round 3 without explicit justification. Appending clarification request.")
+                    vote_text += f"\n\n[NOTE: You changed your stance from {prior_stance} to {stance} but did not provide a clear reason. Please explain why you changed your stance.]"
+
             final_votes[role_name] = {
                 "round": 3,
                 "stance": stance,
@@ -871,7 +885,6 @@ REASONING: [your justification]"""
                 "reasoning": vote_text,
                 "emoji": agent_r1['emoji']
             }
-            
             vote_stances.append(stance)
         
         # Calculate consensus
