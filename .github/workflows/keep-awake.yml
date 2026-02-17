@@ -1,0 +1,14 @@
+name: Keep Service Awake
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Every 15 minutes
+  workflow_dispatch:
+
+jobs:
+  ping-service:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping deployed app
+        run: |
+          curl -sSf https://your-service-url.com || echo "Ping failed"
