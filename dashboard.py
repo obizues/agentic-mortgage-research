@@ -445,7 +445,7 @@ with st.sidebar.expander("ℹ️ About This Project", expanded=False):
         - Production-grade patterns
         - System design thinking
         
-        **Target Audience**: Recruiters, CTOs, hiring managers evaluating VP/Head of Engineering candidates.
+        **Target Audience**: Technology executives, engineering leaders, AI/ML practitioners, and technical decision-makers interested in agentic AI, multi-agent orchestration, and advanced LLM-driven systems.
         
         **What This Demonstrates**:
         - Deep LLM integration (Claude 3.5)
@@ -1161,8 +1161,6 @@ Provide:
             """
             <div style="background: #fffbe6; border-radius: 8px; padding: 0.8em 1em; margin-bottom: 0.5em; border: 1px solid #ffe58f; font-size:1em;">
                 💡 <b>System Learning:</b> Past debate accuracy improves future recommendations.<br>
-                <b>Score = (Pattern × 0.25) + (Consensus × 0.75)</b><br>
-                Pattern: historical accuracy. Consensus: agent agreement.
             </div>
             """,
             unsafe_allow_html=True

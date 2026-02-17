@@ -817,4 +817,4 @@ This is a portfolio project for demonstrating AI/ML capabilities.
 
 ---
 
-**Built as a hands-on AI demonstration for VP/SVP/Head of Engineering roles.**
+**Built as a hands-on AI demonstration for technology leaders, AI/ML practitioners, and technical decision-makers.**
