@@ -129,7 +129,7 @@ st.markdown(
             color: #111 !important;
             background: #fff !important;
             text-shadow: none !important;
-            font-weight: 600 !important;
+            font-weight: 400 !important;
         }
         pre, code {
             color: #111 !important;
