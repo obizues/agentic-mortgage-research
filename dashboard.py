@@ -20,28 +20,29 @@ st.set_page_config(
 
 # Force light color scheme in all browsers + iOS Chrome
 
+
 st.markdown(
-                    /* Ensure metric values are always dark */
-                    .stMetric-value, .stMetricLabel, .stMetricDelta {
-                        color: #222 !important;
-                    }
-                    /* Restore Start Debate button color */
-                    .start-debate-btn {
-                        background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
-                        color: #fff !important;
-                        border: none !important;
-                        font-weight: bold !important;
-                        box-shadow: 0 2px 8px rgba(255,88,88,0.08);
-                    }
-            /* Prevent black background on scroll/overflow/overlays */
-            html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"],
-            .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
-                background: #fff !important;
-            }
     """
     <meta name="color-scheme" content="light only">
     <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
     <style>
+        /* Ensure metric values are always dark */
+        .stMetric-value, .stMetricLabel, .stMetricDelta {
+            color: #222 !important;
+        }
+        /* Restore Start Debate button color */
+        .start-debate-btn {
+            background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
+            color: #fff !important;
+            border: none !important;
+            font-weight: bold !important;
+            box-shadow: 0 2px 8px rgba(255,88,88,0.08);
+        }
+        /* Prevent black background on scroll/overflow/overlays */
+        html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"],
+        .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
+            background: #fff !important;
+        }
         /* Prevent dark selection background in sidebar */
         section[data-testid="stSidebar"] ::selection {
             background: #ffe58f !important;
@@ -512,41 +513,42 @@ with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
                     agent._debate_round_1_initial_positions()
                     mark_llm_action_success(requires_llm=True)
                     st.success("✅ Round 1 positions regenerated!")
-                    st.rerun()
-                elif error_msg:
-                    st.warning(error_msg)
-    
-    if st.button("🔥 Run Full Debate", help="Run all 3 rounds from scratch"):
-        with st.spinner("Running full 3-round debate..."):
-            can_run, error_msg = can_run_llm_action("run_full_debate", requires_llm=True)
-            if can_run:
-                result = agent.run_agent_debate(force=True)
-                mark_llm_action_success(requires_llm=True)
-                debate_id = agent.save_debate_to_database(debate_db)
-                
-                # Auto-validate immediately using current rates
-                if debate_id:
-                    try:
-                        current_rate = None
-                        rate_series = agent.knowledge.get("mortgage_rates")
-                        if rate_series is not None and len(rate_series) > 0:
-                            current_rate = float(rate_series.iloc[-1]['rate'])
-                        else:
-                            rate_insights = agent.knowledge.get("rate_insights", {})
-                            if rate_insights.get("latest_rate") is not None:
-                                current_rate = float(rate_insights.get("latest_rate"))
 
-                        if current_rate is not None:
-                            validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
-                            st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
-                        else:
-                            st.warning(f"[Learning] Debate #{debate_id} saved but could not auto-validate (no rate data)")
-                    except Exception as e:
-                        st.warning(f"[Learning] Debate #{debate_id} saved but validation error: {str(e)}")
-                
+                    st.markdown(
+                        """
+                        <meta name="color-scheme" content="light only">
+                        <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
+                        <style>
+                            /* Prevent black background on scroll/overflow/overlays */
+                            html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"],
+                            .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
+                                background: #fff !important;
+                            }
+                            /* Prevent dark selection background in sidebar */
+                            section[data-testid="stSidebar"] ::selection {
+                                background: #ffe58f !important;
+                                color: #222 !important;
+                            }
+                            section[data-testid="stSidebar"] ::-moz-selection {
+                                background: #ffe58f !important;
+                                color: #222 !important;
+                            }
+                        </style>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+                try:
+                    if current_rate is not None:
+                        validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
+                        st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
+                    else:
+                        st.warning(f"[Learning] Debate #{debate_id} saved but could not auto-validate (no rate data)")
+                except Exception as e:
+                    st.warning(f"[Learning] Debate #{debate_id} saved but validation error: {str(e)}")
                 st.success(result)
                 st.rerun()
-            elif error_msg:
+            if error_msg:
                 st.warning(error_msg)
     
     st.divider()
