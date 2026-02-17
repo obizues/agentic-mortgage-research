@@ -764,12 +764,12 @@ col_status1, col_status2, col_status3, col_status4 = st.columns(4)
 with col_status1:
     llm_icon = "🟢" if config.ENABLE_LLM_PLANNING else "🔴"
     llm_text = "LLM Active" if config.ENABLE_LLM_PLANNING else "Heuristic"
-        st.markdown(f"""
-        <div style='display:flex;flex-direction:column;align-items:center;'>
-            <div style='font-size:1.1em;font-weight:700;color:#111 !important;'>🤖 LLM Status</div>
-            <div style='font-size:1.3em;font-weight:700;color:#111 !important;'>{llm_text}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style='display:flex;flex-direction:column;align-items:center;'>
+        <div style='font-size:1.1em;font-weight:700;color:#111 !important;'>🤖 LLM Status</div>
+        <div style='font-size:1.3em;font-weight:700;color:#111 !important;'>{llm_text}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col_status2:
     timestamps = agent.knowledge.get("fetch_timestamps", {})
