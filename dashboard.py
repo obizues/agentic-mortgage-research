@@ -433,7 +433,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.info("📱 App version: v1.3.7 - Polishing the UI")
+st.sidebar.info("📱 App version: v1.3.8 - Debate Save Hotfix")
 
 st.sidebar.markdown(
     """
@@ -1184,6 +1184,7 @@ Provide:
         recent_debates = debate_db.get_recent_debates(limit=10)
 
 
+
         # ...existing code for validation stats, emerging patterns, etc...
 
 
@@ -1255,7 +1256,12 @@ Provide:
         st.markdown("<div style='margin-bottom:0.5em;'></div>", unsafe_allow_html=True)
         if val_stats['total_validated'] == 0 or not learned_patterns:
             st.info("No historical debates or learned patterns yet. Run additional debates to build a visible learning trail.")
-            
+
+        # --- NESTED EXPANDER: Show all debates summary at the very bottom ---
+        if recent_debates:
+            with st.expander("Show All Historical Debates (Summary)", expanded=False):
+                for d in recent_debates:
+                    st.markdown(f"- **Debate ID:** {d['id']} | **Timestamp:** {d['timestamp']} | **Outcome:** {d['final_recommendation']}")
 else:
     # Helpful message when debate data isn't loaded (e.g., after app redeploy)
     if st.session_state.first_run and not st.session_state.get('plan_generated', False):
@@ -1348,7 +1354,14 @@ with st.sidebar.expander("📝 Agent Activity Log", expanded=False):
         horizontal=True
     )
     
-    if log_filter == "🤖 AI Decisions":
+    if log_filter == "🎯 All Activity":
+        recent_logs = agent.logs[-50:]
+        if recent_logs:
+            for log in recent_logs:
+                st.markdown(log)
+        else:
+            st.caption("No activity yet - run Agentic Plan to see agent logs.")
+    elif log_filter == "🤖 AI Decisions":
         filtered_logs = [log for log in agent.logs if "LLM" in log]
         recent_logs = filtered_logs[-50:]
         if recent_logs:
