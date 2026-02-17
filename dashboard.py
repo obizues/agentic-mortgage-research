@@ -407,7 +407,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.info("📱 App version: v1.3.5 - Learning Enabled")
+st.sidebar.info("📱 App version: v1.3.6 - Hotfix: Dark Mode Cleared")
 
 st.sidebar.markdown(
     """
