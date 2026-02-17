@@ -836,7 +836,7 @@ REASONING: [your justification]"""
 
             message = self.llm_client.messages.create(
                 model=config.MODEL_NAME,
-                max_tokens=200,
+                max_tokens=400,
                 messages=[{"role": "user", "content": prompt}]
             )
             self.session_cost += 0.002
