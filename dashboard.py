@@ -1,3 +1,106 @@
+st.markdown(
+    """
+    <meta name="color-scheme" content="light only">
+    <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
+    <style>
+        html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"],
+        .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
+            background: #fff !important;
+            color: #111 !important;
+            color-scheme: light !important;
+        }
+        /* Ensure all overlays, popups, and modals are light */
+        [data-testid^="stModal"], [data-testid^="stOverlay"], [data-testid^="stDialog"] {
+            background: #fff !important;
+            color: #111 !important;
+            color-scheme: light !important;
+        }
+        /* Ensure links are visible */
+        a {
+            color: #0a74da !important;
+        }
+        /* Sidebar and status text: increase contrast for readability */
+        .stSidebar, .stSidebarContent, .stStatus, .stInfo, .stMetric, .stCaption, .stMarkdown, .stText, .stExpander, .stAlert, .stData, .stDataFrame, .stTable, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
+            color: #222 !important;
+        }
+        /* Ensure metric values are always dark */
+        .stMetric-value, .stMetricLabel, .stMetricDelta {
+            color: #222 !important;
+        }
+        /* Restore Start Debate button color */
+        div[data-testid="stButton"][key="continue_debate_btn"] button {
+            background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
+            color: #fff !important;
+            border: none !important;
+            font-weight: bold !important;
+            box-shadow: 0 2px 8px rgba(255,88,88,0.08);
+        }
+        /* Button backgrounds and text: force light background and dark text for all states */
+        .stButton > button {
+            background: #f7f7f7 !important;
+            color: #222 !important;
+            border: 1px solid #d1d5db !important;
+            box-shadow: none !important;
+        }
+        .stButton > button:enabled {
+            background: #f7f7f7 !important;
+            color: #222 !important;
+        }
+        .stButton > button:active, .stButton > button:focus {
+            background: #e5e7eb !important;
+            color: #111 !important;
+        }
+        .stButton > button:disabled {
+            background: #e5e7eb !important;
+            color: #6b7280 !important;
+            border: 1px solid #d1d5db !important;
+            opacity: 0.6 !important;
+            filter: grayscale(100%) !important;
+        }
+        /* Make disabled buttons visibly greyed out */
+        button:disabled,
+        button[disabled],
+        .stButton > button:disabled,
+        .stButton > button[disabled],
+        .stButton > button:disabled:hover {
+            background-color: #e5e7eb !important;
+            color: #6b7280 !important;
+            border: 1px solid #d1d5db !important;
+            opacity: 0.6 !important;
+            filter: grayscale(100%) !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+        }
+        /* Sidebar text must be dark */
+        section[data-testid="stSidebar"] {
+            color-scheme: light !important;
+        }
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] span,
+        section[data-testid="stSidebar"] div {
+            color: #262730 !important;
+        }
+        /* Input/text area text */
+        input, textarea, select {
+            color: #262730 !important;
+        }
+        /* Headers must be dark (except styled headers) */
+        h1:not(.fintech-header), h2:not(.fintech-header), h3, h4, h5, h6 {
+            color: #111 !important;
+        }
+        /* Prevent dark selection background in sidebar */
+        section[data-testid="stSidebar"] ::selection {
+            background: #ffe58f !important;
+            color: #222 !important;
+        }
+        section[data-testid="stSidebar"] ::-moz-selection {
+            background: #ffe58f !important;
+            color: #222 !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 import streamlit as st
 import importlib
 import pandas as pd
