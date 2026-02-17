@@ -861,13 +861,32 @@ if round_1_positions:
         btn_style_disabled = "background: #e5e7eb !important; color: #6b7280 !important; border: 1px solid #d1d5db !important; min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px; font-weight: bold !important;"
         st.markdown(f"""
         <style>
-        div[data-testid="stButton"][key="continue_debate_btn"] button:not(:disabled) {{
-            {btn_style}
-            transition: background 0.2s, color 0.2s;
+        /* Force orange for Start Debate button with high specificity */
+        div[data-testid="stButton"][key="continue_debate_btn"] button:not(:disabled),
+        div[data-testid="stButton"][key="continue_debate_btn"] > div > button:not(:disabled) {{
+            background: linear-gradient(90deg, #ffb347 0%, #ff9900 100%) !important;
+            background-color: #ff9900 !important;
+            color: #fff !important;
+            border: none !important;
+            font-weight: bold !important;
+            box-shadow: 0 2px 8px rgba(255,165,0,0.08) !important;
+            min-width: 100% !important;
+            min-height: 3em !important;
+            font-size: 1.1em !important;
+            border-radius: 6px !important;
+            transition: background 0.2s, color 0.2s !important;
         }}
-        div[data-testid="stButton"][key="continue_debate_btn"] button:disabled {{
-            {btn_style_disabled}
-            transition: background 0.2s, color 0.2s;
+        div[data-testid="stButton"][key="continue_debate_btn"] button:disabled,
+        div[data-testid="stButton"][key="continue_debate_btn"] > div > button:disabled {{
+            background: #e5e7eb !important;
+            color: #6b7280 !important;
+            border: 1px solid #d1d5db !important;
+            min-width: 100% !important;
+            min-height: 3em !important;
+            font-size: 1.1em !important;
+            border-radius: 6px !important;
+            font-weight: bold !important;
+            transition: background 0.2s, color 0.2s !important;
         }}
         </style>
         """, unsafe_allow_html=True)
