@@ -390,7 +390,7 @@ st.markdown(
 st.markdown(
     """
     <div class="fintech-footer">
-        <b>Chris Obermeier</b> | VP Engineering
+        <b>Chris Obermeier</b> | SVP of Engineering
         <br>
         <span style="font-size: 0.85rem; opacity: 0.8;">Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation</span>
         <p style="margin: 4px 0 2px 0; font-size: 0.9rem; line-height: 1.2;">
@@ -779,12 +779,7 @@ col_status1, col_status2, col_status3, col_status4 = st.columns(4)
 with col_status1:
     llm_icon = "🟢" if config.ENABLE_LLM_PLANNING else "🔴"
     llm_text = "LLM Active" if config.ENABLE_LLM_PLANNING else "Heuristic"
-    st.markdown(f"""
-    <div style='display:flex;flex-direction:column;align-items:flex-start;'>
-        <div style='font-size:1.1em;font-weight:700;color:#111 !important;'>🤖 LLM Status</div>
-        <div style='font-size:1.3em;font-weight:700;color:#111 !important;'>{llm_text}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.metric(label="🤖 LLM Status", value=llm_text)
 
 with col_status2:
     timestamps = agent.knowledge.get("fetch_timestamps", {})
