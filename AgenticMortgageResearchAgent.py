@@ -774,7 +774,7 @@ Provide 2-3 bullet points. Be specific about which agent you're addressing."""
 
             message = self.llm_client.messages.create(
                 model=config.MODEL_NAME,
-                max_tokens=300,
+                max_tokens=600,
                 messages=[{"role": "user", "content": prompt}]
             )
             self.session_cost += 0.003
