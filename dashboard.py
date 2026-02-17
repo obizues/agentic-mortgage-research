@@ -856,18 +856,22 @@ if round_1_positions:
 
         # 3-column layout to match round buttons
         col_btn1, col_btn2, col_btn3 = st.columns(3)
+        btn_disabled = st.session_state.get('pending_debate', False) or st.session_state.get('debate_in_progress', False)
+        btn_style = "background: linear-gradient(90deg, #ffb347 0%, #ff9900 100%) !important; color: #fff !important; border: none !important; font-weight: bold !important; box-shadow: 0 2px 8px rgba(255,165,0,0.08); min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px;"
+        btn_style_disabled = "background: #e5e7eb !important; color: #6b7280 !important; border: 1px solid #d1d5db !important; min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px; font-weight: bold !important;"
+        st.markdown(f"""
+        <style>
+        div[data-testid="stButton"][key="continue_debate_btn"] button:not(:disabled) {{
+            {btn_style}
+            transition: background 0.2s, color 0.2s;
+        }}
+        div[data-testid="stButton"][key="continue_debate_btn"] button:disabled {{
+            {btn_style_disabled}
+            transition: background 0.2s, color 0.2s;
+        }}
+        </style>
+        """, unsafe_allow_html=True)
         with col_btn2:
-            btn_disabled = st.session_state.get('pending_debate', False) or st.session_state.get('debate_in_progress', False)
-            btn_style = "background: linear-gradient(90deg, #ffb347 0%, #ff9900 100%) !important; color: #fff !important; border: none !important; font-weight: bold !important; box-shadow: 0 2px 8px rgba(255,165,0,0.08); min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px;"
-            btn_style_disabled = "background: #e5e7eb !important; color: #6b7280 !important; border: 1px solid #d1d5db !important; min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px; font-weight: bold !important;"
-            st.markdown(f"""
-            <style>
-            div[data-testid="stButton"][key="continue_debate_btn"] button {{
-                {btn_style if not btn_disabled else btn_style_disabled}
-                transition: background 0.2s, color 0.2s;
-            }}
-            </style>
-            """, unsafe_allow_html=True)
             if st.button(
                 "🔥 Start Debate",
                 key="continue_debate_btn",
