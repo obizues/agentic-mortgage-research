@@ -21,6 +21,23 @@ st.set_page_config(
 # Force light color scheme in all browsers + iOS Chrome
 
 st.markdown(
+                    /* Ensure metric values are always dark */
+                    .stMetric-value, .stMetricLabel, .stMetricDelta {
+                        color: #222 !important;
+                    }
+                    /* Restore Start Debate button color */
+                    .start-debate-btn {
+                        background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
+                        color: #fff !important;
+                        border: none !important;
+                        font-weight: bold !important;
+                        box-shadow: 0 2px 8px rgba(255,88,88,0.08);
+                    }
+            /* Prevent black background on scroll/overflow/overlays */
+            html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"],
+            .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
+                background: #fff !important;
+            }
     """
     <meta name="color-scheme" content="light only">
     <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
@@ -754,11 +771,30 @@ if round_1_positions:
                 if st.button(
                     "🔥 Start Debate",
                     width="stretch",
-                    type="primary",
                     key="continue_debate_btn",
+                    help=None,
+                    args=None,
+                    kwargs=None,
+                    on_click=None,
+                    disabled=False,
+                    use_container_width=False,
+                    # Add custom class for styling
+                    # Streamlit doesn't support className directly, so we use a workaround below
                 ):
                     st.session_state.pending_debate = True
                     st.rerun()
+                # Add custom class to the Start Debate button after rendering
+                st.markdown("""
+                <style>
+                div[data-testid="stButton"][key="continue_debate_btn"] button {
+                    background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
+                    color: #fff !important;
+                    border: none !important;
+                    font-weight: bold !important;
+                    box-shadow: 0 2px 8px rgba(255,88,88,0.08);
+                }
+                </style>
+                """, unsafe_allow_html=True)
             
             st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
