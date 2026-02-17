@@ -1149,11 +1149,16 @@ Provide:
             <div style="background: #fffbe6; border-radius: 8px; padding: 0.8em 1em; margin-bottom: 0.5em; border: 1px solid #ffe58f;">
                 <span style="font-size:1em;">💡 <b>System Learning:</b> The AI uses past debate accuracy to improve future recommendations when patterns repeat.</span>
             </div>
+            <div style='font-size:0.92em; color:#555; margin-bottom:0.5em;'>
+                <b>How the Final Score is Calculated:</b><br>
+                <span style='font-size:1.05em;'>
+                <b>Final Score = (Pattern Accuracy × 0.25) + (Agent Consensus × 0.75)</b>
+                </span><br>
+                Pattern accuracy can contribute up to <b>25%</b> of the final score, while <b>agent consensus</b> determines the remaining <b>75%</b>.<br>
+                <i>Pattern accuracy</i> is based on how often similar market conditions led to correct predictions in the past.<br>
+                <i>Agent consensus</i> is the strength of agreement among the three agents in the current debate.
+            </div>
             """,
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            "<div style='font-size:0.92em; color:#555; margin-bottom:0.5em;'>Pattern accuracy can contribute up to <b>25%</b> of the final score, while <b>agent consensus</b> determines the remaining <b>75%</b>.</div>",
             unsafe_allow_html=True
         )
         # Get recent debates from database
