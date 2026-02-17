@@ -1469,8 +1469,8 @@ with st.sidebar.expander("📝 Agent Activity Log", expanded=False):
         recent_logs = filtered_logs[-50:]
         if recent_logs:
             for log in recent_logs:
-                # Clean up log format - remove timestamps and make more readable
-                clean_log = log.replace("[LLM]", "🤖 **AI Decision:**")
+                # Clean up log format - remove timestamps and make more readable, no bold
+                clean_log = log.replace("[LLM]", "🤖 AI Decision:")
                 st.markdown(clean_log)
         else:
             st.caption("No AI decisions yet - run Agentic Plan to see AI in action")
@@ -1480,41 +1480,17 @@ with st.sidebar.expander("📝 Agent Activity Log", expanded=False):
         recent_logs = filtered_logs[-50:]
         if recent_logs:
             for log in recent_logs:
-                # Format each log entry with better spacing
+                # Format each log entry with better spacing, no bold
                 if "📊" in log:
-                    st.markdown(f"📊 **Planner:** {log.split('📊')[1] if '📊' in log else log}")
+                    st.markdown(f"📊 Planner: {log.split('📊')[1] if '📊' in log else log}")
                 elif "📉" in log:
-                    st.markdown(f"📉 **Market Analyst:** {log.split('📉')[1] if '📉' in log else log}")
+                    st.markdown(f"📉 Market Analyst: {log.split('📉')[1] if '📉' in log else log}")
                 elif "🛡️" in log:
-                    st.markdown(f"🛡️ **Risk Officer:** {log.split('🛡️')[1] if '🛡️' in log else log}")
+                    st.markdown(f"🛡️ Risk Officer: {log.split('🛡️')[1] if '🛡️' in log else log}")
                 elif "⚙️" in log:
-                    st.markdown(f"⚙️ **System:** {log.split('⚙️')[1] if '⚙️' in log else log}")
+                    st.markdown(f"⚙️ System: {log.split('⚙️')[1] if '⚙️' in log else log}")
                 else:
-                    st.markdown(
-                        """
-                        <style>
-                        html, body, [class*='css'], .stApp, .main, .block-container, .stMarkdown, .stText, .stAlert {
-                            background: #fff !important;
-                            color: #111 !important;
-                            --text-color: #111 !important;
-                        }
-                        /* Force all status/log text to be dark and readable */
-                        .stStatus, .stLog, .stLogText, .stStatusText, .status-text, .log-text, .stMarkdown pre, .stMarkdown code, .stCodeBlock, .stException, .stTextArea, .stTextInput, .stText, .stCaption, .stDataFrame, .stTable, .stMetric, .stMetricLabel, .stMetricValue {
-                            color: #111 !important;
-                            background: #fff !important;
-                            text-shadow: none !important;
-                            font-weight: 500 !important;
-                        }
-                        /* Extra: ensure all monospace/log/status text is dark */
-                        pre, code {
-                            color: #111 !important;
-                            background: #fff !important;
-                        }
-                        /* ...existing code... */
-                        </style>
-                        """,
-                        unsafe_allow_html=True,
-                    )
+                    st.markdown(log)
 
 # ---------- Diagnostics (Simplified for v1.3.1) ----------
 with st.sidebar.expander("🧪 Diagnostics", expanded=False):
