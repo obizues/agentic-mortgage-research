@@ -912,6 +912,12 @@ REASONING: [your justification]"""
         
         self.log(f"✅ Consensus reached: {final_recommendation}")
         self.log(f"   Vote breakdown: {dict(vote_counts)}")
+
+        # Automatically save debate to database after consensus is reached
+        if self.debate_db is not None:
+            self.save_debate_to_database(self.debate_db)
+        else:
+            self.log("WARNING: Debate database not initialized; debate not saved.")
     
     def save_debate_to_database(self, db):
         """Save the completed debate to the historical database."""
