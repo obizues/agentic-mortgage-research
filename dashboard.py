@@ -854,10 +854,9 @@ if round_1_positions:
             st.session_state.pending_debate = False
 
 
-        # Centered single column for Start Debate button
-        col_center = st.columns([1,2,1])[1]
-        with col_center:
-            # Determine if button should be disabled (greyed out)
+        # 3-column layout to match round buttons
+        col_btn1, col_btn2, col_btn3 = st.columns(3)
+        with col_btn2:
             btn_disabled = st.session_state.get('pending_debate', False) or st.session_state.get('debate_in_progress', False)
             btn_style = "background: linear-gradient(90deg, #ffb347 0%, #ff9900 100%) !important; color: #fff !important; border: none !important; font-weight: bold !important; box-shadow: 0 2px 8px rgba(255,165,0,0.08); min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px;"
             btn_style_disabled = "background: #e5e7eb !important; color: #6b7280 !important; border: 1px solid #d1d5db !important; min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px; font-weight: bold !important;"
@@ -873,7 +872,7 @@ if round_1_positions:
                 "🔥 Start Debate",
                 key="continue_debate_btn",
                 disabled=btn_disabled,
-                use_container_width=True
+                width="stretch"
             ):
                 st.session_state.pending_debate = True
                 st.rerun()
