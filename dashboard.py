@@ -903,6 +903,7 @@ if round_1_positions:
                 except Exception as e:
                     st.error(f"Error running debate rounds: {e}")
                 st.session_state.pending_debate = False
+                st.session_state.selected_round = 2
                 st.rerun()
         st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
