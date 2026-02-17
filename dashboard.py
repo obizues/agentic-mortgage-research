@@ -1422,19 +1422,31 @@ with st.sidebar.expander("📝 Agent Activity Log", expanded=False):
                 elif "⚙️" in log:
                     st.markdown(f"⚙️ **System:** {log.split('⚙️')[1] if '⚙️' in log else log}")
                 else:
-                    st.markdown(log)
-        else:
-            st.caption("No agent actions yet - generate the Agentic Plan to see agents work")
-    else:
-        recent_logs = agent.logs[-100:]
-        if recent_logs:
-            st.markdown("**Recent Activity:**")
-            for log in recent_logs:
-                st.caption(log)
-        else:
-            st.caption("No activity yet - start by running the Agentic Plan")
-
-# ---------- Outcome Validation ----------
+                    st.markdown(
+                        """
+                        <style>
+                        html, body, [class*='css'], .stApp, .main, .block-container, .stMarkdown, .stText, .stAlert {
+                            background: #fff !important;
+                            color: #111 !important;
+                            --text-color: #111 !important;
+                        }
+                        /* Force all status/log text to be dark and readable */
+                        .stStatus, .stLog, .stLogText, .stStatusText, .status-text, .log-text, .stMarkdown pre, .stMarkdown code, .stCodeBlock, .stException, .stTextArea, .stTextInput, .stText, .stCaption, .stDataFrame, .stTable, .stMetric, .stMetricLabel, .stMetricValue {
+                            color: #111 !important;
+                            background: #fff !important;
+                            text-shadow: none !important;
+                            font-weight: 500 !important;
+                        }
+                        /* Extra: ensure all monospace/log/status text is dark */
+                        pre, code {
+                            color: #111 !important;
+                            background: #fff !important;
+                        }
+                        /* ...existing code... */
+                        </style>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
 # ---------- Diagnostics (Simplified for v1.3.1) ----------
 with st.sidebar.expander("🧪 Diagnostics", expanded=False):
