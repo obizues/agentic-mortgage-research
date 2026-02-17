@@ -1003,6 +1003,18 @@ if round_1_positions:
         r3_help = None if r3_available else "Click 'Start Debate' above to unlock this round"
         if st.button("🤝 Round 3", width="stretch", key="round_3_btn", disabled=not r3_available, help=r3_help):
             st.session_state.selected_round = 3
+
+    # Add round descriptions below the buttons
+    st.markdown(
+        """
+        <div style='display: flex; justify-content: space-between; margin-top: -8px; margin-bottom: 12px; font-size: 0.98em; color: #444;'>
+            <div style='width: 32%; text-align: center;'><b>Round 1:</b> Initial Positions</div>
+            <div style='width: 32%; text-align: center;'><b>Round 2:</b> Cross-Examination</div>
+            <div style='width: 32%; text-align: center;'><b>Round 3:</b> Final Votes</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     
     # ===== SECTION 3: DISPLAY SELECTED ROUND CONTENT =====
     round_names = {
