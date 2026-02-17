@@ -19,10 +19,22 @@ st.set_page_config(
 )
 
 # Force light color scheme in all browsers + iOS Chrome
+
 st.markdown(
     """
     <meta name="color-scheme" content="light only">
     <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
+    <style>
+        /* Prevent dark selection background in sidebar */
+        section[data-testid="stSidebar"] ::selection {
+            background: #ffe58f !important;
+            color: #222 !important;
+        }
+        section[data-testid="stSidebar"] ::-moz-selection {
+            background: #ffe58f !important;
+            color: #222 !important;
+        }
+    </style>
     """,
     unsafe_allow_html=True
 )
@@ -39,9 +51,31 @@ st.markdown(
         a {
             color: #0a74da !important;
         }
-        /* Button text must be dark for readability */
-        .stButton > button:enabled {
+        /* Sidebar and status text: increase contrast for readability */
+        .stSidebar, .stSidebarContent, .stStatus, .stInfo, .stMetric, .stCaption, .stMarkdown, .stText, .stExpander, .stAlert, .stData, .stDataFrame, .stTable, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
             color: #222 !important;
+        }
+        /* Button backgrounds and text: force light background and dark text for all states */
+        .stButton > button {
+            background: #f7f7f7 !important;
+            color: #222 !important;
+            border: 1px solid #d1d5db !important;
+            box-shadow: none !important;
+        }
+        .stButton > button:enabled {
+            background: #f7f7f7 !important;
+            color: #222 !important;
+        }
+        .stButton > button:active, .stButton > button:focus {
+            background: #e5e7eb !important;
+            color: #111 !important;
+        }
+        .stButton > button:disabled {
+            background: #e5e7eb !important;
+            color: #6b7280 !important;
+            border: 1px solid #d1d5db !important;
+            opacity: 0.6 !important;
+            filter: grayscale(100%) !important;
         }
         /* Make disabled buttons visibly greyed out */
         button:disabled,
@@ -229,14 +263,6 @@ st.sidebar.markdown(
 with st.sidebar.expander("ℹ️ About This Project", expanded=False):
     st.markdown(
         """
-        **Built By**
-        
-        [github.com/obizues](https://github.com/obizues)
-        
-        VP Engineering | Enterprise & PE-Backed Platform Modernization | AI & Data-Driven Transformation | Scaling High-Performance Teams
-        
-        ---
-        
         **Portfolio Project**
         
         This is a demonstration of **agentic AI architecture** built to showcase:
@@ -738,11 +764,6 @@ if round_1_positions:
     
     # ===== CONSENSUS SUMMARY AT TOP (when debate complete) =====
     if debate_complete:
-        # TEMP DEBUG: Show raw vote data for troubleshooting
-        st.expander("🛠️ Debug: Raw Vote Data").write({
-            "debate_round_3": agent.knowledge.get("debate_round_3", {}),
-            "debate_results": agent.knowledge.get("debate_results", {})
-        })
         st.divider()
         debate_results = agent.knowledge["debate_results"]
         final_stance = debate_results.get("majority_vote", "NEUTRAL")
@@ -979,11 +1000,18 @@ Provide:
     # Historical Debates Section (moved below Executive Summary)
     st.divider()
     with st.expander("📚 Historical Debates & System Learning", expanded=False):
-        st.caption("💡 Learn from past debates using historical multi-agent system's predictions' accuracy.")
         st.markdown(
-            "<div style='font-size:0.85em; color:#888; margin-bottom:0.2em; margin-top:-0.5em;'>"
-            "Pattern accuracy influences up to 25% of the final score. Agent consensus drives the remaining 75%."
-            "</div>", unsafe_allow_html=True)
+            """
+            <div style="background: #fffbe6; border-radius: 8px; padding: 0.8em 1em; margin-bottom: 0.5em; border: 1px solid #ffe58f;">
+                <span style="font-size:1em;">💡 <b>System Learning:</b> The AI uses past debate accuracy to improve future recommendations when patterns repeat.</span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            "<div style='font-size:0.92em; color:#555; margin-bottom:0.5em;'>Pattern accuracy can contribute up to <b>25%</b> of the final score, while <b>agent consensus</b> determines the remaining <b>75%</b>.</div>",
+            unsafe_allow_html=True
+        )
         # Get recent debates from database
         recent_debates = debate_db.get_recent_debates(limit=10)
 
@@ -994,7 +1022,7 @@ Provide:
         # Validation stats and emerging patterns at the bottom
         val_stats = debate_db.get_validation_stats()
         if val_stats['total_validated'] > 0:
-            st.markdown("**Emerging Patterns**")
+            st.markdown("**Emerging Patterns:**")
             learned_patterns = None
             try:
                 learned_patterns = debate_db.get_learned_patterns(limit=5, min_times=1)
@@ -1016,7 +1044,6 @@ Provide:
 
 
                 # Short agent recommendation preview with weighted logic
-                st.markdown("<b>Current Pattern:</b>", unsafe_allow_html=True)
                 if 'mortgage_rates' in agent.knowledge and not agent.knowledge['mortgage_rates'].empty:
                     current_rate = agent.knowledge['mortgage_rates'].iloc[-1]['rate']
                     avg_rate = agent.knowledge['mortgage_rates']['rate'].mean()
@@ -1114,7 +1141,7 @@ Provide:
                             rec = 'BEARISH'
                         else:
                             rec = 'NEUTRAL'
-                        st.write(f"{best_pattern['Prediction']} prediction when {best_pattern['Condition']} | Accuracy: {round(float(best_pattern['Accuracy']), 2)}%")
+                        st.markdown(f"<b>Current Pattern:</b> {best_pattern['Prediction']} when {best_pattern['Condition']} | Accuracy: {round(float(best_pattern['Accuracy']), 2)}%", unsafe_allow_html=True)
                         st.write(f"**Weighted Recommendation:** {rec}")
                         st.write("**Formula Breakdown:**")
                         st.latex(r"w_p = \text{(pattern accuracy)} \times 0.25")
