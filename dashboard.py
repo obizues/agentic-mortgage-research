@@ -1,17 +1,17 @@
 import streamlit as st
 st.markdown(
     """
-    <meta name="color-scheme" content="light only">
-    <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
+    <meta name=\"color-scheme\" content=\"light only\">
+    <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"light-content\">
     <style>
-        html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"],
+        html, body, .main, [data-testid=\"stAppViewContainer\"], [data-testid=\"stSidebar\"], [data-testid=\"stHeader\"], [data-testid=\"stToolbar\"],
         .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
             background: #fff !important;
             color: #111 !important;
             color-scheme: light !important;
         }
         /* Ensure all overlays, popups, and modals are light */
-        [data-testid^="stModal"], [data-testid^="stOverlay"], [data-testid^="stDialog"] {
+        [data-testid^=\"stModal\"], [data-testid^=\"stOverlay\"], [data-testid^=\"stDialog\"] {
             background: #fff !important;
             color: #111 !important;
             color-scheme: light !important;
@@ -29,7 +29,7 @@ st.markdown(
             color: #222 !important;
         }
         /* Restore Start Debate button color */
-        div[data-testid="stButton"][key="continue_debate_btn"] button {
+        div[data-testid=\"stButton\"][key=\"continue_debate_btn\"] button {
             background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
             color: #fff !important;
             border: none !important;
@@ -73,12 +73,12 @@ st.markdown(
             box-shadow: none !important;
         }
         /* Sidebar text must be dark */
-        section[data-testid="stSidebar"] {
+        section[data-testid=\"stSidebar\"] {
             color-scheme: light !important;
         }
-        section[data-testid="stSidebar"] p,
-        section[data-testid="stSidebar"] span,
-        section[data-testid="stSidebar"] div {
+        section[data-testid=\"stSidebar\"] p,
+        section[data-testid=\"stSidebar\"] span,
+        section[data-testid=\"stSidebar\"] div {
             color: #262730 !important;
         }
         /* Input/text area text */
@@ -90,15 +90,40 @@ st.markdown(
             color: #111 !important;
         }
         /* Prevent dark selection background in sidebar */
-        section[data-testid="stSidebar"] ::selection {
+        section[data-testid=\"stSidebar\"] ::selection {
             background: #ffe58f !important;
             color: #222 !important;
         }
-        section[data-testid="stSidebar"] ::-moz-selection {
+        section[data-testid=\"stSidebar\"] ::-moz-selection {
             background: #ffe58f !important;
             color: #222 !important;
+        }
+
+        /* AGGRESSIVE: Force all log/status text to be dark, even in nested/unknown containers */
+        [class*="log"], [class*="status"], [data-testid*="log"], [data-testid*="status"], .stStatus, .stLog, .stLogText, .stStatusText, .status-text, .log-text, .stMarkdown pre, .stMarkdown code, .stCodeBlock, .stException, .stTextArea, .stTextInput, .stText, .stCaption, .stDataFrame, .stTable, .stMetric, .stMetricLabel, .stMetricValue {
+            color: #111 !important;
+            background: #fff !important;
+            text-shadow: none !important;
+            font-weight: 600 !important;
+        }
+        pre, code {
+            color: #111 !important;
+            background: #fff !important;
         }
     </style>
+    <script>
+    // Fallback: forcibly set color for any element containing log/status text after render
+    window.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        document.querySelectorAll('[class*="log"], [class*="status"], [data-testid*="log"], [data-testid*="status"]').forEach(function(el) {
+          el.style.color = '#111';
+          el.style.background = '#fff';
+          el.style.textShadow = 'none';
+          el.style.fontWeight = '600';
+        });
+      }, 500);
+    });
+    </script>
     """,
     unsafe_allow_html=True
 )
