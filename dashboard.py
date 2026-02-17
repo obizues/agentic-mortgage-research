@@ -4,6 +4,21 @@ st.markdown(
     <meta name=\"color-scheme\" content=\"light only\">
     <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"light-content\">
     <style>
+        /* Responsive fix for LaTeX/formula containers on mobile */
+        .stLatex, .katex-display, .stMarkdown .katex-display, .stMarkdown .stLatex {
+            max-width: 100vw !important;
+            overflow-x: auto !important;
+            font-size: 1em !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+            line-height: 1.2 !important;
+        }
+        @media (max-width: 600px) {
+            .stLatex, .katex-display, .stMarkdown .katex-display, .stMarkdown .stLatex {
+                font-size: 0.95em !important;
+                padding: 0.2em 0.1em !important;
+            }
+        }
                 /* ULTRA-AGGRESSIVE: Force Start Debate button to orange, override all .stButton > button styles for this key */
                 div[data-testid="stButton"][key="continue_debate_btn"] button,
                 div[data-testid="stButton"][key="continue_debate_btn"] > div > button {
