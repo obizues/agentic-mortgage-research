@@ -333,13 +333,14 @@ st.markdown(
         }
         .fintech-header {
             background: linear-gradient(90deg, #0a74da 0%, #00c48c 100%);
-            color: white;
+            color: #111 !important;
             padding: 24px 16px;
             border-radius: 8px;
             margin-bottom: 0;
             font-size: 2rem;
             font-weight: 700;
             box-shadow: 0 2px 8px rgba(10, 116, 218, 0.15);
+            text-shadow: 0 1px 4px #fff, 0 0px 2px #fff;
         }
         .fintech-footer {
             margin-top: 0;
@@ -779,7 +780,7 @@ with col_status1:
     llm_icon = "🟢" if config.ENABLE_LLM_PLANNING else "🔴"
     llm_text = "LLM Active" if config.ENABLE_LLM_PLANNING else "Heuristic"
     st.markdown(f"""
-    <div style='display:flex;flex-direction:column;align-items:center;'>
+    <div style='display:flex;flex-direction:column;align-items:flex-start;'>
         <div style='font-size:1.1em;font-weight:700;color:#111 !important;'>🤖 LLM Status</div>
         <div style='font-size:1.3em;font-weight:700;color:#111 !important;'>{llm_text}</div>
     </div>
@@ -1357,10 +1358,16 @@ with st.expander("📈 Data Visualizations (Market Context)", expanded=False):
         df_rates = agent.knowledge["mortgage_rates"]
         st.altair_chart(
             alt.Chart(df_rates).mark_line(color='blue').encode(
-                x='date:T',
-                y='rate:Q',
+                x=alt.X('date:T', axis=alt.Axis(labelColor='#111', titleColor='#111', gridColor='#bbb')),
+                y=alt.Y('rate:Q', axis=alt.Axis(labelColor='#111', titleColor='#111', gridColor='#bbb')),
                 tooltip=['date:T', 'rate:Q']
-            ).properties(title='30-Year Fixed Mortgage Rates', height=300),
+            ).properties(title=alt.TitleParams(text='30-Year Fixed Mortgage Rates', color='#111'), height=300)
+            .configure_axis(
+                labelColor='#111',
+                titleColor='#111',
+                gridColor='#bbb'
+            )
+            .configure_title(color='#111'),
             width="stretch"
         )
     
@@ -1369,10 +1376,16 @@ with st.expander("📈 Data Visualizations (Market Context)", expanded=False):
         df_prices = agent.knowledge["home_prices"]
         st.altair_chart(
             alt.Chart(df_prices).mark_line(color='green').encode(
-                x='date:T',
-                y='price:Q',
+                x=alt.X('date:T', axis=alt.Axis(labelColor='#111', titleColor='#111', gridColor='#bbb')),
+                y=alt.Y('price:Q', axis=alt.Axis(labelColor='#111', titleColor='#111', gridColor='#bbb')),
                 tooltip=['date:T', 'price:Q']
-            ).properties(title='US Home Prices Index', height=300),
+            ).properties(title=alt.TitleParams(text='US Home Prices Index', color='#111'), height=300)
+            .configure_axis(
+                labelColor='#111',
+                titleColor='#111',
+                gridColor='#bbb'
+            )
+            .configure_title(color='#111'),
             width="stretch"
         )
     
@@ -1392,11 +1405,16 @@ with st.expander("📈 Data Visualizations (Market Context)", expanded=False):
             ['rate_norm', 'price_norm'],
             as_=['Metric', 'Value']
         ).mark_line().encode(
-            x='date:T',
-            y='Value:Q',
+            x=alt.X('date:T', axis=alt.Axis(labelColor='#111', titleColor='#111', gridColor='#bbb')),
+            y=alt.Y('Value:Q', axis=alt.Axis(labelColor='#111', titleColor='#111', gridColor='#bbb')),
             color='Metric:N',
             tooltip=['date:T', 'Metric:N', 'Value:Q']
-        ).properties(title='Normalized Mortgage Rates vs Home Prices', height=300)
+        ).properties(title=alt.TitleParams(text='Normalized Mortgage Rates vs Home Prices', color='#111'), height=300)
+        chart_combined = chart_combined.configure_axis(
+            labelColor='#111',
+            titleColor='#111',
+            gridColor='#bbb'
+        ).configure_title(color='#111')
         st.altair_chart(chart_combined, width="stretch")
 
 # ---------- Agent Logs ----------
