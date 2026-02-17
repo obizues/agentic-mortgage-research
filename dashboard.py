@@ -657,18 +657,15 @@ with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
                     agent._debate_round_1_initial_positions()
                     mark_llm_action_success(requires_llm=True)
                     st.success("✅ Round 1 positions regenerated!")
-
                     st.markdown(
                         """
                         <meta name="color-scheme" content="light only">
                         <meta name="apple-mobile-web-app-status-bar-style" content="light-content">
                         <style>
-                            /* Prevent black background on scroll/overflow/overlays */
                             html, body, .main, [data-testid="stAppViewContainer"], [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stToolbar"],
                             .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
                                 background: #fff !important;
                             }
-                            /* Prevent dark selection background in sidebar */
                             section[data-testid="stSidebar"] ::selection {
                                 background: #ffe58f !important;
                                 color: #222 !important;
@@ -681,19 +678,9 @@ with st.sidebar.expander("⚙️ Agent Controls", expanded=False):
                         """,
                         unsafe_allow_html=True
                     )
-
-                try:
-                    if current_rate is not None:
-                        validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
-                        st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
-                    else:
-                        st.warning(f"[Learning] Debate #{debate_id} saved but could not auto-validate (no rate data)")
-                except Exception as e:
-                    st.warning(f"[Learning] Debate #{debate_id} saved but validation error: {str(e)}")
-                st.success(result)
-                st.rerun()
-            if error_msg:
-                st.warning(error_msg)
+                    st.rerun()
+                if error_msg:
+                    st.warning(error_msg)
     
     st.divider()
     if st.button("Clear Logs"):
@@ -898,6 +885,14 @@ if round_1_positions:
                 width="stretch"
             ):
                 st.session_state.pending_debate = True
+                # Actually run the debate rounds 2 & 3
+                try:
+                    with st.spinner("Running Rounds 2 & 3 (Cross-Examination & Voting)..."):
+                        agent.run_action("continue_debate", force=True)
+                    st.success("✅ Rounds 2 & 3 complete!")
+                except Exception as e:
+                    st.error(f"Error running debate rounds: {e}")
+                st.session_state.pending_debate = False
                 st.rerun()
         st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
