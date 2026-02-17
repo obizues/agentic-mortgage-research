@@ -1,4 +1,10 @@
+
 # 🏠 Agentic Mortgage Research Agent
+
+---
+**Target Audience:**
+This project is designed for technology executives, engineering leaders, AI/ML practitioners, and technical decision-makers interested in agentic AI, multi-agent orchestration, and advanced LLM-driven systems. It is especially relevant for CTOs, C-level leaders, AI architects, and developers evaluating modern approaches to intelligent automation and explainable AI in production environments.
+---
 
 A hands-on AI project demonstrating **intelligent agent reasoning** with real LLM integration. This agent autonomously researches US mortgage rates and home prices, uses Claude AI to make intelligent decisions about data fetching, and generates insightful analysis.
 
