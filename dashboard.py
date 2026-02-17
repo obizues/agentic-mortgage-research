@@ -43,13 +43,7 @@ st.markdown(
             color: #222 !important;
         }
         /* Restore Start Debate button color */
-        div[data-testid=\"stButton\"][key=\"continue_debate_btn\"] button {
-            background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
-            color: #fff !important;
-            border: none !important;
-            font-weight: bold !important;
-            box-shadow: 0 2px 8px rgba(255,88,88,0.08);
-        }
+        /* Removed fallback: all Start Debate button styling is handled below with high specificity */
         /* Button backgrounds and text: force light background and dark text for all states */
         .stButton > button {
             background: #f7f7f7 !important;
