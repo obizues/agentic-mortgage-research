@@ -126,9 +126,16 @@ The debate system demonstrates true agentic autonomy where agents:
 
 ---
 
-## 🧠 What's New in v1.3.5 (AI Learning Enabled)
 
-**v1.3.5** implements the **core AI learning functionality** - agents now actively improve their decisions based on historical patterns from validated debates.
+## 🛠️ What's New in v1.3.6 (Hotfix: Dark Mode Cleared)
+
+**v1.3.6** is a hotfix release that fully eliminates all dark mode and color-scheme issues across all devices and browsers. The dashboard is now always readable, with all text, tables, graphs, and buttons forced to light mode and high-contrast colors. The top banner no longer glows, and all visual glitches from dark mode are resolved.
+
+**Status:** This release clears up all known dark mode issues and is safe for production use.
+
+---
+
+## 🧠 What's New in v1.3.5 (AI Learning Enabled)
 
 ### Key Features
 - **Pattern Extraction from Validation**: When you validate a debate outcome, the system automatically extracts market patterns (conditions, prediction types, accuracy)
