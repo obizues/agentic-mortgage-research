@@ -4,6 +4,20 @@ st.markdown(
     <meta name=\"color-scheme\" content=\"light only\">
     <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"light-content\">
     <style>
+        /* --- BULLETPROOF: Force light mode even if prefers-color-scheme: dark is set --- */
+        @media (prefers-color-scheme: dark) {
+            html, body, [class*='st'], [data-testid*='status'], [data-testid*='overlay'], .stStatus, .stAlert, .stMarkdown, .stText, .stDataFrame, .stTable {
+                background: #fff !important;
+                color: #111 !important;
+                color-scheme: light !important;
+                text-shadow: none !important;
+            }
+            * {
+                background: #fff !important;
+                color: #111 !important;
+                text-shadow: none !important;
+            }
+        }
         html, body, .main, [data-testid=\"stAppViewContainer\"], [data-testid=\"stSidebar\"], [data-testid=\"stHeader\"], [data-testid=\"stToolbar\"],
         .block-container, .stApp, .stContent, .stView, .stOverlay, .stModal, .stDialog, .stAlert, .stExpander, .stDataFrame, .stTable, .stMarkdown, .stText, .stStatus, .stInfo, .stMetric, .stCaption, .stSubheader, .stHeader, .stTitle, .stTextInput, .stTextArea, .stSelectbox, .stRadio, .stCheckbox, .stSlider, .stNumberInput, .stDateInput, .stTimeInput, .stColorPicker, .stFileUploader, .stButton, .stDownloadButton, .stForm, .stFormSubmitButton, .stProgress, .stSpinner, .stTooltip, .stTooltipContent, .stTooltipArrow, .stTooltipInner, .stTooltipOuter, .stTooltipText, .stTooltipTitle, .stTooltipDescription, .stTooltipFooter, .stTooltipClose, .stTooltipArrowInner, .stTooltipArrowOuter {
             background: #fff !important;
@@ -693,7 +707,7 @@ st.session_state.initializing = False
 
 if should_auto_run:
     st.session_state.initializing = True
-    with st.status("<span style='color:#111 !important;font-weight:700;'>🤖 Multi-Agent System Initializing...</span>", expanded=True) as status:
+    with st.status("🤖 Multi-Agent System Initializing...", expanded=True) as status:
         try:
             if config.ENABLE_LLM_PLANNING:
                 can_run, error_msg = can_run_llm_action("auto_agentic_plan", requires_llm=False)
@@ -843,96 +857,31 @@ if round_1_positions:
         if "pending_debate" not in st.session_state:
             st.session_state.pending_debate = False
 
-        col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-        with col_btn2:
-            # Show spinner early if debate is already in progress from previous cycle
-            if st.session_state.debate_in_progress:
-                st.spinner("🎯 Running cross-examination and consensus rounds...")
-            
-            if st.session_state.pending_debate or st.session_state.debate_in_progress:
-                # Run the debate from the pending state and hide the button while running
-                st.session_state.pending_debate = False
-                st.session_state.debate_in_progress = True
-                # First verify LLM client is available
-                if llm_client is None:
-                    st.error(f"❌ LLM not available: {llm_init_error}")
-                    st.session_state.debate_in_progress = False
-                elif agent.llm_client is None:
-                    st.error("❌ Agent LLM client is None. This shouldn't happen – please refresh the page.")
-                    st.session_state.debate_in_progress = False
-                else:
-                    can_run, error_msg = can_run_llm_action("continue_debate", requires_llm=True)
-                    if error_msg:
-                        st.warning(error_msg)
-                        st.session_state.debate_in_progress = False
-                    else:
-                        try:
-                            with st.spinner("🎯 Running cross-examination and consensus rounds..."):
-                                result = agent.continue_debate(force=True)
-                                if "debate_results" in agent.knowledge:
-                                    mark_llm_action_success(requires_llm=True)
-                                    debate_id = agent.save_debate_to_database(debate_db)
-                                    
-                                    # Auto-validate immediately using current rates
-                                    if debate_id:
-                                        try:
-                                            current_rate = None
-                                            rate_series = agent.knowledge.get("mortgage_rates")
-                                            if rate_series is not None and len(rate_series) > 0:
-                                                current_rate = float(rate_series.iloc[-1]['rate'])
-                                            else:
-                                                rate_insights = agent.knowledge.get("rate_insights", {})
-                                                if rate_insights.get("latest_rate") is not None:
-                                                    current_rate = float(rate_insights.get("latest_rate"))
 
-                                            if current_rate is not None:
-                                                validation_result = debate_db.validate_debate_outcome(debate_id, current_rate)
-                                                st.info(f"[Learning] Debate #{debate_id} auto-validated: {validation_result['status'].upper()}")
-                                            else:
-                                                st.warning(f"[Learning] Debate #{debate_id} saved but could not auto-validate (no rate data)")
-                                        except Exception as e:
-                                            st.warning(f"[Learning] Debate #{debate_id} saved but validation error: {str(e)}")
-                                    
-                                    st.session_state.debate_in_progress = False
-                                    st.session_state.selected_round = 2  # Auto-advance to Round 2 to show cross-examination
-                                    st.rerun()
-                                else:
-                                    st.error("❌ Debate did not complete properly. Check agent logs below.")
-                                    st.session_state.debate_in_progress = False
-                        except Exception as e:
-                            st.error(f"❌ Error running debate: {e}")
-                            st.session_state.debate_in_progress = False
-            else:
-                # Single button; disabled state prevents duplicate rendering
-                if st.button(
-                    "🔥 Start Debate",
-                    width="stretch",
-                    key="continue_debate_btn",
-                    help=None,
-                    args=None,
-                    kwargs=None,
-                    on_click=None,
-                    disabled=False,
-                    use_container_width=False,
-                    # Add custom class for styling
-                    # Streamlit doesn't support className directly, so we use a workaround below
-                ):
-                    st.session_state.pending_debate = True
-                    st.rerun()
-                # Add custom class to the Start Debate button after rendering
-                st.markdown("""
-                <style>
-                div[data-testid="stButton"][key="continue_debate_btn"] button {
-                    background: linear-gradient(90deg, #ff5858 0%, #ffb347 100%) !important;
-                    color: #fff !important;
-                    border: none !important;
-                    font-weight: bold !important;
-                    box-shadow: 0 2px 8px rgba(255,88,88,0.08);
-                }
-                </style>
-                """, unsafe_allow_html=True)
-            
-            st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
+        # Centered single column for Start Debate button
+        col_center = st.columns([1,2,1])[1]
+        with col_center:
+            # Determine if button should be disabled (greyed out)
+            btn_disabled = st.session_state.get('pending_debate', False) or st.session_state.get('debate_in_progress', False)
+            btn_style = "background: linear-gradient(90deg, #ffb347 0%, #ff9900 100%) !important; color: #fff !important; border: none !important; font-weight: bold !important; box-shadow: 0 2px 8px rgba(255,165,0,0.08); min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px;"
+            btn_style_disabled = "background: #e5e7eb !important; color: #6b7280 !important; border: 1px solid #d1d5db !important; min-width: 100%; min-height: 3em; font-size: 1.1em; border-radius: 6px; font-weight: bold !important;"
+            st.markdown(f"""
+            <style>
+            div[data-testid="stButton"][key="continue_debate_btn"] button {{
+                {btn_style if not btn_disabled else btn_style_disabled}
+                transition: background 0.2s, color 0.2s;
+            }}
+            </style>
+            """, unsafe_allow_html=True)
+            if st.button(
+                "🔥 Start Debate",
+                key="continue_debate_btn",
+                disabled=btn_disabled,
+                use_container_width=True
+            ):
+                st.session_state.pending_debate = True
+                st.rerun()
+        st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #666;'>Runs Rounds 2 & 3 → Voting Consensus → Summary</p>", unsafe_allow_html=True)
     
     # ===== CONSENSUS SUMMARY AT TOP (when debate complete) =====
     if debate_complete:
@@ -1211,7 +1160,45 @@ Provide:
                         "Condition": pattern['condition']
                     })
                 df_patterns = pd.DataFrame(pattern_data)
-                st.dataframe(df_patterns, use_container_width=True, hide_index=True)
+                # Render as HTML table for bulletproof readability
+                table_html = """
+                <style>
+                .emerging-patterns-table {
+                    width: 100%;
+                    background: #fff !important;
+                    color: #111 !important;
+                    border-collapse: collapse;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    margin-bottom: 1em;
+                }
+                .emerging-patterns-table th, .emerging-patterns-table td {
+                    border: 1px solid #ddd;
+                    padding: 8px 10px;
+                    text-align: left;
+                    background: #fff !important;
+                    color: #111 !important;
+                }
+                .emerging-patterns-table th {
+                    background: #f7f7f7 !important;
+                    font-weight: bold;
+                }
+                </style>
+                <table class='emerging-patterns-table'>
+                  <thead>
+                    <tr>
+                      <th>Prediction</th>
+                      <th>Accuracy</th>
+                      <th>Frequency</th>
+                      <th>Condition</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                """
+                for _, row in df_patterns.iterrows():
+                    table_html += f"<tr><td>{row['Prediction']}</td><td>{row['Accuracy']}</td><td>{row['Frequency']}</td><td>{row['Condition']}</td></tr>"
+                table_html += "</tbody></table>"
+                st.markdown(table_html, unsafe_allow_html=True)
 
 
 
