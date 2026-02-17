@@ -1,3 +1,4 @@
+import streamlit as st
 st.markdown(
     """
     <meta name="color-scheme" content="light only">
