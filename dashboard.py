@@ -4,6 +4,23 @@ st.markdown(
     <meta name=\"color-scheme\" content=\"light only\">
     <meta name=\"apple-mobile-web-app-status-bar-style\" content=\"light-content\">
     <style>
+                /* ULTRA-AGGRESSIVE: Force Start Debate button to orange, override all .stButton > button styles for this key */
+                div[data-testid="stButton"][key="continue_debate_btn"] button,
+                div[data-testid="stButton"][key="continue_debate_btn"] > div > button {
+                    background: linear-gradient(90deg, #ffb347 0%, #ff9900 100%) !important;
+                    background-color: #ff9900 !important;
+                    color: #fff !important;
+                    border: none !important;
+                    font-weight: bold !important;
+                    box-shadow: 0 2px 8px rgba(255,165,0,0.08) !important;
+                    min-width: 100% !important;
+                    min-height: 3em !important;
+                    font-size: 1.1em !important;
+                    border-radius: 6px !important;
+                    transition: background 0.2s, color 0.2s !important;
+                    filter: none !important;
+                    opacity: 1 !important;
+                }
         /* --- BULLETPROOF: Force light mode even if prefers-color-scheme: dark is set --- */
         @media (prefers-color-scheme: dark) {
             html, body, [class*='st'], [data-testid*='status'], [data-testid*='overlay'], .stStatus, .stAlert, .stMarkdown, .stText, .stDataFrame, .stTable {
