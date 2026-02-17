@@ -433,7 +433,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.sidebar.info("📱 App version: v1.3.6 - Hotfix: Dark Mode Cleared")
+st.sidebar.info("📱 App version: v1.3.7 - Polishing the UI")
 
 st.sidebar.markdown(
     """
@@ -1246,7 +1246,7 @@ Provide:
             st.markdown(table_html, unsafe_allow_html=True)
         # Always show the formula explanation and LaTeX, even if no patterns/validation yet
         st.markdown("**How the Recommendation Formula Works:**")
-        st.write("The system combines agent consensus and pattern accuracy to generate a weighted recommendation. The formula is:")
+        st.write("The system combines agent consensus and pattern accuracy to generate a weighted recommendation.\n\n The Formulas are:")
         st.latex(r"w_p = \text{(pattern accuracy)} \times 0.25")
         st.markdown("<div style='text-align:center; font-size:0.85em; color:#bbb;'>Pattern weight (max 0.25)</div>", unsafe_allow_html=True)
         st.latex(r"w_a = 0.75")
